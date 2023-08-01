@@ -8,7 +8,7 @@ import (
 func main() {
 	go service.RunMessageServer()
 
-	r := gin.Default()
+	r := gin.New()
 
 	initRouter(r)
 
