@@ -2,10 +2,16 @@ package main
 
 import (
 	"github.com/RaymondCode/simple-demo/controller"
+	"github.com/RaymondCode/simple-demo/middleware"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 func initRouter(r *gin.Engine) {
+	r.Use(middleware.RateLimitMiddleware(time.Second, 20, 5))
+	r.Use(middleware.LoggerMiddleware)
+	r.Use(middleware.ErrorMiddleware)
+
 	// public directory is used to serve static resources
 	r.Static("/static", "./public")
 
