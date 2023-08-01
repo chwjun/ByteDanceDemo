@@ -6,6 +6,7 @@ require (
 	github.com/gavv/httpexpect/v2 v2.8.0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gookit/slog v0.5.4
+	github.com/juju/ratelimit v1.0.2
 	github.com/stretchr/testify v1.8.4
 )
 
