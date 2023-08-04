@@ -1,0 +1,8 @@
+settings:
+  mysql:
+    host:        # MySQL主机
+    port:        # MySQL端口号
+    schema:      # 数据库名
+    username:    # 用户名
+    password:    # 密码
+    logLevel:    # 日志等级 1-Silent 2-Error 3-Warn 4-Info
