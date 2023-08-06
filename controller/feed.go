@@ -1,12 +1,13 @@
 package controller
 
 import (
+	service "bytedancedemo/service"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
-	service "bytedancedemo/service"
+
 	"github.com/gin-gonic/gin"
-	"golang.org/x/tools/go/analysis/passes/nilfunc"
 )
 
 type FeedResponse struct {
@@ -18,7 +19,13 @@ type FeedResponse struct {
 // 参数latest_time 和 token
 func Feed(c *gin.Context) {
 	default_time := time.Now().UnixMilli()
-	var latest_time = c.DefaultQuery("latest_time",strconv.FormatInt(default_time,10))
+	var latest_time_str = c.DefaultQuery("latest_time", strconv.FormatInt(default_time, 10))
+	temp, err := strconv.ParseInt(latest_time_str, 10, 64)
+	if err != nil {
+		fmt.Println("%s cannot change to int64", latest_time_str)
+		panic(1)
+	}
+	latest_time := time.UnixMilli(temp)
 	// 调用Service的Feed进行处理
 	video_list, next_time, err := service.Feed(latest_time)
 	

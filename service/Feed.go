@@ -1,10 +1,16 @@
 package service
 
-import "time"
+import (
+	"bytedancedemo/database"
+	"fmt"
+	"sync"
+	"time"
+)
 
 type ResponseVideo struct {
 	id int
 	// 作者信息
+	// Author	用户的结构体
 	play_url       string
 	cover_url      string
 	favorite_count int
@@ -13,28 +19,45 @@ type ResponseVideo struct {
 	title          string
 }
 
-// 数据库中视频表的结构
-type Video_Dao struct {
-	// BaseModel
-	ID        uint
-	CreatedAt time.Time
-	UpdateAt  time.Time
-	DeletedAt time.Time
-	// 视频表
-	AuthorID uint
-	Title    string
-	PlayURL  string
-	CoverURL string
-}
-
 const size = 10
 
-func Feed(latest_time string) ([]ResponseVideo, string, error) {
-	video_dao_list := make([]Video_Dao, 0, size)
+func Feed(latest_time time.Time) ([]ResponseVideo, time.Time, error) {
+
+	response_video_list := make([]ResponseVideo, 0, size)
 	// 根据最新时间查找数据库获取视频的信息
-	// 遍历video_list，根据视频id查作者信息
-	// 根据视频id找评论总数
-	// 根据视频id找点赞总数
-	// 根据当前用户id和视频id判断是否点赞了
-	// 将上述信息组装成响应的列表
+	dao_video_list, err := database.GetVideosByLatestTime(latest_time)
+	if err != nil {
+		fmt.Println(err)
+		return response_video_list,time.Time{},err
+	}
+	
+	// 遍历video_list
+	for _,video := range dao_video_list {
+		var wait_group sync.WaitGroup
+		wait_group.Add(4)
+		//根据视频id查作者信息
+		go func(video *database.Video) {
+			
+			wait_group.Done()
+		}(&video)
+		// 根据视频id找评论总数
+		go func(video *database.Video) {
+
+			wait_group.Done()
+		}(&video)
+		// 根据视频id找点赞总数
+		go func(video *database.Video) {
+
+			wait_group.Done()
+		}(&video)
+		// 根据当前用户id和视频id判断是否点赞了
+		go func(video *database.Video) {
+
+			wait_group.Done()
+		}(&video)
+		wait_group.Wait()
+
+	}
+	
+	return response_video_list,dao_video_list[len(dao_video_list)-1].CreatedAt,nil
 }
