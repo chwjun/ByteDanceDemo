@@ -10,7 +10,7 @@ func main() {
 	//go service.RunMessageServer()
 
 	initialize.ReadConfig()
-	initialize.ConectDB()
+	//initialize.ConectDB()
 	r := gin.New()
 
 	router.InitRouter(r)
