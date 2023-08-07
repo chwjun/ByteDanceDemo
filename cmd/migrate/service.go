@@ -31,4 +31,5 @@ func run() {
 	config2.Init(config)
 	database.Init()
 	gen.Setup()
+	slog.Info("环境初始化成功！")
 }
