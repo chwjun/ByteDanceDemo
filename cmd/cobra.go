@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"errors"
+	"github.com/RaymondCode/simple-demo/cmd/api"
 	"github.com/RaymondCode/simple-demo/cmd/migrate"
 	"github.com/gookit/slog"
 	"github.com/spf13/cobra"
@@ -26,6 +27,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(migrate.StartCmd)
+	RootCmd.AddCommand(api.StartCmd)
 }
 
 func Execute() {
