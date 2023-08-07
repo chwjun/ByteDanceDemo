@@ -6,12 +6,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Init() {
-	viper.SetConfigFile("./config/settings.yml")
+func Init(configFilePath string) {
+	viper.SetConfigFile(configFilePath)
 	if err := viper.ReadInConfig(); err != nil {
 		slog.Errorf("加载配置信息失败 %v", err)
 	} else {
 		slog.Debug("加载配置信息成功")
 	}
-
 }
