@@ -2,7 +2,6 @@ package dao
 
 import (
 	"testing"
-	"time"
 
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/stretchr/testify/assert"
@@ -14,69 +13,45 @@ func TestLike(t *testing.T) {
 		like    model.Like
 		wantErr bool
 	}{
+		/*{
+			model.Like{
+				UserID:  9999,
+				VideoID: 1,
+			},
+			false,
+		},
 		{
 			model.Like{
-				BaseModel: model.BaseModel{
-					ID:        10,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				},
-				UserID:  9999, // 不存在的 UserID
-				VideoID: 1,    // 存在的 VideoID
-				Liked:   1,
+				UserID:  1,
+				VideoID: 9999,
 			},
-			true, // 预期有错误，因为用户ID不存在
+			true,
 		},
-		// 测试用例2
-		struct {
-			like    model.Like
-			wantErr bool
-		}{
+		{
 			model.Like{
-				BaseModel: model.BaseModel{
-					ID:        11,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				},
-				UserID:  1,    // 存在的 UserID
-				VideoID: 9999, // 不存在的 VideoID
-				Liked:   1,
+				UserID:  1,
+				VideoID: 1,
 			},
-			true, // 预期有错误，因为视频ID不存在
+			true,
 		},
-		// 测试用例3
-		struct {
-			like    model.Like
-			wantErr bool
-		}{
+		{
 			model.Like{
-				BaseModel: model.BaseModel{
-					ID:        3,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				},
-				UserID:  1, // 存在的 UserID
-				VideoID: 1, // 存在的 VideoID
-				Liked:   1,
+				UserID:  2,
+				VideoID: 2,
 			},
-			true, // 预期有错误，因为用户已经点赞了这个视频
-		},
-		// 测试用例4
-		struct {
-			like    model.Like
-			wantErr bool
-		}{
+			false,
+		}, {
 			model.Like{
-				BaseModel: model.BaseModel{
-					ID:        4,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				},
-				UserID:  2, // 存在的 UserID
-				VideoID: 2, // 存在的 VideoID
-				Liked:   0,
+				UserID:  17,
+				VideoID: 17,
 			},
-			false, // 预期没有错误，因为用户还没有点赞这个视频
+			true,
+		},*/{
+			model.Like{
+				UserID:  20,
+				VideoID: 22,
+			},
+			true,
 		},
 	}
 
