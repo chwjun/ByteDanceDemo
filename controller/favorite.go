@@ -1,19 +1,34 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/RaymondCode/simple-demo/proto"
+	"github.com/RaymondCode/simple-demo/service"
+	"github.com/gin-gonic/gin"
 )
 
-// FavoriteAction no practical effect, just check if token is valid
 func FavoriteAction(c *gin.Context) {
-	token := c.Query("token")
+	var req proto.FavoriteActionRequest
 
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 0})
-	} else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+	// 尝试将请求数据绑定到我们的请求结构中
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	// 创建服务
+	s := service.FavoriteServiceImpl{}
+
+	// 调用服务层的FavoriteAction方法
+	resp, err := s.FavoriteAction(c, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 如果没有错误，则返回正常响应
+	c.JSON(http.StatusOK, resp)
 }
 
 // FavoriteList all users have same favorite video list

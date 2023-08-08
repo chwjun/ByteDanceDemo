@@ -81,7 +81,6 @@ func TestUnlike(t *testing.T) {
 			model.Like{
 				UserID:  1,
 				VideoID: 1,
-				Liked:   1,
 			},
 			false, // 预期没有错误，因为用户已经点赞了这个视频
 		},
@@ -89,7 +88,6 @@ func TestUnlike(t *testing.T) {
 			model.Like{
 				UserID:  2,
 				VideoID: 2,
-				Liked:   1,
 			},
 			false, // 预期没有错误，因为用户已经点赞了这个视频
 		},
@@ -97,7 +95,6 @@ func TestUnlike(t *testing.T) {
 			model.Like{
 				UserID:  1,
 				VideoID: 9999,
-				Liked:   1,
 			},
 			false, // 预期没有错误，因为用户已经点赞了这个视频
 		},
@@ -105,7 +102,6 @@ func TestUnlike(t *testing.T) {
 			model.Like{
 				UserID:  9999,
 				VideoID: 1,
-				Liked:   1,
 			},
 			false, // 预期没有错误，因为用户已经点赞了这个视频
 		},
@@ -113,7 +109,6 @@ func TestUnlike(t *testing.T) {
 			model.Like{
 				UserID:  20,
 				VideoID: 20,
-				Liked:   1,
 			},
 			false, // 预期没有错误，因为用户已经点赞了这个视频
 		},
@@ -121,7 +116,6 @@ func TestUnlike(t *testing.T) {
 			model.Like{
 				UserID:  20,
 				VideoID: 22,
-				Liked:   1,
 			},
 			false, // 预期没有错误，因为用户已经点赞了这个视频
 		},
