@@ -9,3 +9,7 @@ settings:
   jwt:
     secretKey: 123456        # jwt加密私钥
     expirationTime: 24       # token过期时间 （小时）
+  oss:
+    avatar:                  # 头像
+    backgroundImage:         # 背景图
+    signature:               # 个性签名

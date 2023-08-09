@@ -12,7 +12,7 @@ func Setup() {
 	r.Use(middleware.RateLimitMiddleware(time.Second, 20, 5))
 	r.Use(middleware.LoggerMiddleware)
 	r.Use(middleware.ErrorMiddleware)
-	//r.Use(middleware.JWTMiddleware)
+	r.Use(middleware.JWTMiddleware)
 
 	// public directory is used to serve static resources
 	r.Static("/static", "./public")

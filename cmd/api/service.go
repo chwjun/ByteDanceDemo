@@ -2,10 +2,11 @@
 package api
 
 import (
+	"github.com/RaymondCode/simple-demo/api"
 	config2 "github.com/RaymondCode/simple-demo/config"
+	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/database"
 	"github.com/RaymondCode/simple-demo/router"
-	"github.com/RaymondCode/simple-demo/service"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +19,8 @@ var (
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
 			database.Init()
-			go service.RunMessageServer()
+			go api.RunMessageServer()
+			dao.SetDefault(database.DB)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()

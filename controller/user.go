@@ -1,9 +1,14 @@
 package controller
 
 import (
+	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/service"
+	"github.com/RaymondCode/simple-demo/utils/token"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
+	"github.com/spf13/viper"
 	"net/http"
-	"sync/atomic"
+	"time"
 )
 
 // usersLoginInfo use map to store user info, and key is username+password for demo
@@ -19,8 +24,6 @@ var usersLoginInfo = map[string]User{
 	},
 }
 
-var userIdSequence = int64(1)
-
 type UserLoginResponse struct {
 	Response
 	UserId int64  `json:"user_id,omitempty"`
@@ -29,31 +32,47 @@ type UserLoginResponse struct {
 
 type UserResponse struct {
 	Response
-	User User `json:"user"`
+	User service.User `json:"user"`
 }
 
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	token := username + password
-
-	if _, exist := usersLoginInfo[token]; exist {
+	usi := service.GetUserServiceInstance()
+	if _, isExist := usi.GetUserBasicByPassword(username, password); isExist {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
+			Response: Response{StatusCode: 1, StatusMsg: "用户已存在"},
 		})
 	} else {
-		atomic.AddInt64(&userIdSequence, 1)
-		newUser := User{
-			Id:   userIdSequence,
-			Name: username,
+		user, ok := usi.InsertUser(&model.User{Name: username, Password: password})
+		if !ok {
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "注册失败"},
+			})
+		} else {
+			tokenString, err := token.GenerateToken(
+				[]byte(viper.GetString("settings.jwt.secretKey")),
+				token.Claims{
+					UserID:   user.ID,
+					UserName: user.Name,
+					StandardClaims: jwt.StandardClaims{
+						ExpiresAt: time.Now().Add(time.Hour * viper.GetDuration("settings.jwt.expirationTime")).Unix(),
+					},
+				},
+			)
+			if err != nil {
+				c.JSON(http.StatusOK, UserLoginResponse{
+					Response: Response{StatusCode: 1, StatusMsg: "token令牌签发失败"},
+				})
+			} else {
+				c.JSON(http.StatusOK, UserLoginResponse{
+					Response: Response{StatusCode: 0},
+					UserId:   user.ID,
+					Token:    tokenString,
+				})
+			}
 		}
-		usersLoginInfo[token] = newUser
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   userIdSequence,
-			Token:    username + password,
-		})
 	}
 }
 
@@ -61,32 +80,54 @@ func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	token := username + password
-
-	if user, exist := usersLoginInfo[token]; exist {
+	usi := service.GetUserServiceInstance()
+	user, isExist := usi.GetUserBasicByPassword(username, password)
+	if !isExist {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   user.Id,
-			Token:    token,
+			Response: Response{
+				StatusCode: 1,
+				StatusMsg:  "用户不存在",
+			},
 		})
 	} else {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+		tokenString, err := token.GenerateToken([]byte(viper.GetString("settings.jwt.secretKey")), token.Claims{
+			UserID:   user.ID,
+			UserName: user.Name,
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: time.Now().Add(time.Hour * viper.GetDuration("settings.jwt.expirationTime")).Unix(),
+			},
 		})
+		if err != nil {
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{
+					StatusCode: 1,
+					StatusMsg:  "token令牌签发失败",
+				},
+			})
+		} else {
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{
+					StatusCode: 0,
+				},
+				UserId: user.ID,
+				Token:  tokenString,
+			})
+		}
 	}
 }
 
 func UserInfo(c *gin.Context) {
-	token := c.Query("token")
-
-	if user, exist := usersLoginInfo[token]; exist {
+	userID := c.GetInt64("user_id")
+	usi := service.GetUserServiceInstance()
+	user, err := usi.GetUserDetailsById(userID, nil)
+	if err != nil {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 0},
-			User:     user,
+			Response: Response{StatusCode: 1, StatusMsg: "用户不存在"},
 		})
 	} else {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+			Response: Response{StatusCode: 0},
+			User:     *user,
 		})
 	}
 }
