@@ -136,3 +136,21 @@ func TestUnlike(t *testing.T) {
 		}
 	}
 }
+
+func TestGetLikedVideoIDs(t *testing.T) {
+	// Prepare test data
+	userID := uint(10)
+	videoID1 := uint(101)
+	videoID2 := uint(102)
+
+	DB.Create(&model.Like{UserID: userID, VideoID: videoID1, Liked: 1})
+	DB.Create(&model.Like{UserID: userID, VideoID: videoID2, Liked: 1})
+
+	// Call the function under test
+	videoIDs, err := GetLikedVideoIDs(userID)
+	assert.NoError(t, err)
+
+	// Check the results
+	expectedVideoIDs := []uint{videoID1, videoID2}
+	assert.ElementsMatch(t, expectedVideoIDs, videoIDs)
+}

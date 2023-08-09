@@ -23,7 +23,7 @@ func FavoriteAction(c *gin.Context) {
 	// 调用服务层的FavoriteAction方法
 	resp, err := s.FavoriteAction(c, &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

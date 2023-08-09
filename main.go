@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/RaymondCode/simple-demo/initialize"
 	"github.com/RaymondCode/simple-demo/router"
 	"github.com/gin-gonic/gin"
 )
@@ -9,7 +8,7 @@ import (
 func main() {
 	//go service.RunMessageServer()
 
-	initialize.ReadConfig()
+	//initialize.ReadConfig()
 	//initialize.ConectDB()
 	r := gin.New()
 

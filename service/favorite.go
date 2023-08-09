@@ -53,3 +53,38 @@ func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *proto.Fav
 		StatusMsg:  &statusMsg,
 	}, nil
 }
+func (s *FavoriteServiceImpl) FavoriteList(ctx context.Context, req *proto.FavoriteListRequest) (*proto.FavoriteListResponse, error) {
+	// 从上下文获得userId（假设中间件已将userId放入上下文）
+	userID, _ := ctx.Value("user_id").(int64)
+
+	// 通过userId获取用户点赞的视频列表
+	videoList, err := GetFavoriteVideoInfoByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &proto.FavoriteListResponse{
+		StatusCode: 0,         // 0表示成功
+		VideoList:  videoList, // 直接使用从dao返回的视频列表
+	}
+
+	return response, nil
+}
+
+func GetFavoriteVideoInfoByUserID(userID int64) ([]*proto.Video, error) {
+	videoIDs, err := getLikedVideoIDs(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var protoVideos []*proto.Video
+	for _, videoID := range videoIDs {
+		video, err := getVideoDetails(videoID, userID)
+		if err != nil {
+			return nil, err
+		}
+		protoVideos = append(protoVideos, video)
+	}
+
+	return protoVideos, nil
+}
