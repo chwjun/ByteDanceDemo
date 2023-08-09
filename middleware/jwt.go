@@ -12,6 +12,7 @@ import (
 func JWTMiddleware(c *gin.Context) {
 	path := c.Request.URL.Path
 	if path == "/douyin/user/register/" || path == "/douyin/user/login/" {
+		c.Set("role", "tourist")
 		c.Next()
 		return
 	}
@@ -19,18 +20,24 @@ func JWTMiddleware(c *gin.Context) {
 	if tokenString == "" {
 		tokenString = c.Request.PostFormValue("token")
 	}
-	claims, err := token.ParseToken([]byte(viper.GetString("settings.jwt.secretKey")), tokenString)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, fmt.Sprintf("token非法 %v", err))
-		c.Abort()
-		return
+	if tokenString == "" {
+		c.Set("role", "tourist")
+		c.Next()
+	} else {
+		claims, err := token.ParseToken([]byte(viper.GetString("settings.jwt.secretKey")), tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, fmt.Sprintf("token非法 %v", err))
+			c.Abort()
+			return
+		}
+		if err = claims.Valid(); err != nil {
+			c.JSON(http.StatusUnauthorized, fmt.Sprintf("token非法 %v", err))
+			c.Abort()
+			return
+		}
+		c.Set("user_id", claims.UserID)
+		c.Set("username", claims.UserName)
+		c.Set("role", claims.Role)
+		c.Next()
 	}
-	if err = claims.Valid(); err != nil {
-		c.JSON(http.StatusUnauthorized, fmt.Sprintf("token非法 %v", err))
-		c.Abort()
-		return
-	}
-	c.Set("user_id", claims.UserID)
-	c.Set("username", claims.UserName)
-	c.Next()
 }

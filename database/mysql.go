@@ -12,6 +12,7 @@ import (
 )
 
 var DB *gorm.DB
+var DSN string
 
 func Init() {
 	username := viper.GetString("settings.mysql.username")
@@ -20,8 +21,8 @@ func Init() {
 	port := viper.GetString("settings.mysql.port")
 	schema := viper.GetString("settings.mysql.schema")
 	logLevel := viper.GetInt("settings.mysql.logLevel")
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=10000ms", username, password, host, port, schema)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	DSN = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=10000ms", username, password, host, port, schema)
+	db, err := gorm.Open(mysql.Open(DSN), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.LogLevel(logLevel)),
 	})
 	if err != nil {

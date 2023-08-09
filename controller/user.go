@@ -45,7 +45,7 @@ func Register(c *gin.Context) {
 			Response: Response{StatusCode: 1, StatusMsg: "用户已存在"},
 		})
 	} else {
-		user, ok := usi.InsertUser(&model.User{Name: username, Password: password})
+		user, ok := usi.InsertUser(&model.User{Name: username, Password: password, Role: "common_user"})
 		if !ok {
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "注册失败"},
@@ -56,6 +56,7 @@ func Register(c *gin.Context) {
 				token.Claims{
 					UserID:   user.ID,
 					UserName: user.Name,
+					Role:     user.Role,
 					StandardClaims: jwt.StandardClaims{
 						ExpiresAt: time.Now().Add(time.Hour * viper.GetDuration("settings.jwt.expirationTime")).Unix(),
 					},
@@ -93,6 +94,7 @@ func Login(c *gin.Context) {
 		tokenString, err := token.GenerateToken([]byte(viper.GetString("settings.jwt.secretKey")), token.Claims{
 			UserID:   user.ID,
 			UserName: user.Name,
+			Role:     user.Role,
 			StandardClaims: jwt.StandardClaims{
 				ExpiresAt: time.Now().Add(time.Hour * viper.GetDuration("settings.jwt.expirationTime")).Unix(),
 			},

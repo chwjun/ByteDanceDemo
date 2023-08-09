@@ -10,6 +10,7 @@ type Claims struct {
 	jwt.StandardClaims
 	UserID   int64  `json:"user_id"`
 	UserName string `json:"username"`
+	Role     string `json:"role"`
 }
 
 func GenerateToken(secretKey []byte, claims Claims) (tokenString string, err error) {
