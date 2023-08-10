@@ -14,8 +14,11 @@ type BaseModel struct {
 // 用户表
 type User struct {
 	BaseModel
-	Name     string `gorm:"type:varchar(191);not null;unique;comment:用户名"`
-	Password string `gorm:"size:191;not null;comment:用户密码"`
+	Name            string `gorm:"type:varchar(191);not null;unique;comment:用户名"`
+	Password        string `gorm:"size:191;not null;comment:用户密码"`
+	Avatar          string `gorm:"type:varchar(191);default:'http://yourserver.com/default_avatar.jpg';comment:用户头像链接"`
+	BackgroundImage string `gorm:"type:varchar(191);default:'http://yourserver.com/default_background.jpg';comment:用户个人页顶部大图链接"`
+	Signature       string `gorm:"type:text;default:'这个用户很懒，什么都没有留下。';comment:个人简介"`
 }
 
 // 视频表
