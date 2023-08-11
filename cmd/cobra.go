@@ -15,6 +15,7 @@ var RootCmd = &cobra.Command{
 	SilenceUsage:      true,
 	DisableAutoGenTag: false,
 	Args: func(cmd *cobra.Command, args []string) error {
+		slog.Info("欢迎使用抖音极简版 -h查看命令")
 		if len(args) < 1 {
 			return errors.New("requires at least one arg")
 		}
