@@ -51,6 +51,23 @@ func Unlike(userID uint, videoID uint) error {
 	return DB.Save(&like).Error
 }
 
+func GetUserDetailsByID(userID uint) (string, string, string, string, error) {
+	user := model.User{}
+	if err := DB.Select("name, avatar, background_image, signature").Where("id = ?", userID).First(&user).Error; err != nil {
+		return "", "", "", "", err
+	}
+	return user.Name, user.Avatar, user.BackgroundImage, user.Signature, nil
+}
+
+// 获取用户昵称
+func GetUserNameByID(userID uint) (string, error) {
+	user := model.User{}
+	if err := DB.Select("name").Where("id = ?", userID).First(&user).Error; err != nil {
+		return "", err
+	}
+	return user.Name, nil
+}
+
 // 获取用户点赞的所有视频ID
 func GetLikedVideoIDs(userID uint) ([]uint, error) {
 	var videoIDs []uint
@@ -61,11 +78,10 @@ func GetLikedVideoIDs(userID uint) ([]uint, error) {
 	return videoIDs, nil
 }
 
-// 通过视频ID获取视频详情
 func GetVideoDetailsByID(videoID uint) (uint, string, string, string, error) {
 	video := model.Video{}
 	if err := DB.Select("author_id", "title", "play_url", "cover_url").Where("id = ?", videoID).First(&video).Error; err != nil {
-		return 0, "", "", "", err
+		return 0, "", "", "", fmt.Errorf("找不到视频ID %d: %v", videoID, err)
 	}
 	return video.AuthorID, video.Title, video.PlayURL, video.CoverURL, nil
 }
@@ -144,4 +160,17 @@ func GetUserWorkCount(userID uint) (int64, error) {
 		return 0, err
 	}
 	return workCount, nil
+}
+
+// IsVideoLikedByUser 判断用户是否点赞了视频
+func IsVideoLikedByUser(userID uint, videoID uint) (bool, error) {
+	var count int64
+
+	// 查询 Like 表，看是否有与给定的用户 ID 和视频 ID 匹配的记录
+	if err := DB.Table("likes").Where("user_id = ? AND video_id = ? AND liked = 1", userID, videoID).Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	// 如果 count 大于 0，表示用户点赞了视频
+	return count > 0, nil
 }
