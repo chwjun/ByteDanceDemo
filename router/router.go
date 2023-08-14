@@ -4,12 +4,12 @@ import (
 	"github.com/RaymondCode/simple-demo/controller"
 	"github.com/RaymondCode/simple-demo/middleware"
 	"github.com/gin-gonic/gin"
-	"time"
+	"github.com/spf13/viper"
 )
 
 func Setup() {
 	r := gin.New()
-	r.Use(middleware.RateLimitMiddleware(time.Second, 20, 5))
+	r.Use(middleware.RateLimitMiddleware(viper.GetInt64("settings.application.rateLimit")))
 	r.Use(middleware.LoggerMiddleware)
 	r.Use(middleware.ErrorMiddleware)
 	r.Use(middleware.JWTMiddleware)

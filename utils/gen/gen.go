@@ -1,8 +1,8 @@
-// Package utils @Author: youngalone [2023/8/7]
+// Package gen @Author: youngalone [2023/8/7]
 package gen
 
 import (
-	"github.com/RaymondCode/simple-demo/database"
+	"github.com/RaymondCode/simple-demo/database/mysql"
 	"gorm.io/gen"
 )
 
@@ -17,7 +17,7 @@ func Setup() {
 		FieldWithIndexTag: false,
 		FieldWithTypeTag:  true,
 	})
-	g.UseDB(database.DB)
+	g.UseDB(mysql.DB)
 	allModel := g.GenerateAllTable()
 	g.ApplyBasic(allModel...)
 	g.Execute()

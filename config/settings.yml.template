@@ -1,4 +1,6 @@
 settings:
+  application:
+    rateLimit: 50            # 请求限流阈值
   mysql:
     host: 127.0.0.1          # MySQL主机
     port: 3306               # MySQL端口号
@@ -13,3 +15,6 @@ settings:
     avatar:                  # 头像
     backgroundImage:         # 背景图
     signature:               # 个性签名
+  redis:
+    addr: 127.0.0.1:6379     # redis url
+    password:                # redis密码

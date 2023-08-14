@@ -2,27 +2,28 @@
 package middleware
 
 import (
+	redis2 "github.com/RaymondCode/simple-demo/database/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/gookit/slog"
-	"github.com/juju/ratelimit"
 	"net/http"
+	"strconv"
 	"time"
 )
 
-// RateLimitMiddleware
-//
-//	@Description: 令牌桶算法限流器
-//	@param fillInterval 令牌生成间隔
-//	@param cap 令牌桶容量
-//	@param quantum 令牌生成量 个/次
-//	@return gin.HandlerFunc
-func RateLimitMiddleware(fillInterval time.Duration, cap, quantum int64) gin.HandlerFunc {
-	bucket := ratelimit.NewBucketWithQuantum(fillInterval, cap, quantum)
+func RateLimitMiddleware(limit int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if bucket.TakeAvailable(1) < 1 {
-			c.JSON(http.StatusForbidden, gin.H{
-				"code": http.StatusForbidden,
-				"msg":  "rate limit...",
+		ip := c.ClientIP()
+		key := "rate_" + ip + "_" + strconv.Itoa(int(time.Now().Unix()))
+		result, err := redis2.RateLimitClient.Incr(key).Result()
+		redis2.RateLimitClient.Expire(key, time.Minute)
+		if err != nil {
+			slog.Fatalf("redis出错 %v", err)
+			return
+		}
+		if result > limit {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code": http.StatusTooManyRequests,
+				"msg":  "请求过于频繁",
 			})
 			slog.Warn("请求过于频繁")
 			c.Abort()

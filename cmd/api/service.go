@@ -5,7 +5,8 @@ import (
 	"github.com/RaymondCode/simple-demo/api"
 	config2 "github.com/RaymondCode/simple-demo/config"
 	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/database"
+	"github.com/RaymondCode/simple-demo/database/mysql"
+	"github.com/RaymondCode/simple-demo/database/redis"
 	"github.com/RaymondCode/simple-demo/router"
 	"github.com/spf13/cobra"
 )
@@ -18,9 +19,10 @@ var (
 		Long:  "抖音极简版APP服务器",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
-			database.Init()
+			mysql.Init()
+			redis.Init()
 			go api.RunMessageServer()
-			dao.SetDefault(database.DB)
+			dao.SetDefault(mysql.DB)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()

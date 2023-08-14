@@ -3,7 +3,8 @@ package migrate
 
 import (
 	config2 "github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/database"
+	"github.com/RaymondCode/simple-demo/database/mysql"
+	"github.com/RaymondCode/simple-demo/database/redis"
 	"github.com/RaymondCode/simple-demo/utils/casbin"
 	"github.com/RaymondCode/simple-demo/utils/gen"
 	"github.com/gookit/slog"
@@ -30,7 +31,8 @@ func init() {
 func run() {
 	slog.Info("开始环境初始化...")
 	config2.Init(config)
-	database.Init()
+	mysql.Init()
+	redis.Init()
 	gen.Setup()
 	casbin.Setup()
 	slog.Info("环境初始化成功！")

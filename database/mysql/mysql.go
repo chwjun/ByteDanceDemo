@@ -1,5 +1,5 @@
-// Package database @Author: youngalone [2023/8/4]
-package database
+// Package mysql @Author: youngalone [2023/8/4]
+package mysql
 
 import (
 	"fmt"

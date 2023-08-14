@@ -7,9 +7,9 @@ require (
 	github.com/casbin/gorm-adapter/v2 v2.1.0
 	github.com/gavv/httpexpect/v2 v2.8.0
 	github.com/gin-gonic/gin v1.7.7
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gookit/slog v0.5.4
-	github.com/juju/ratelimit v1.0.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
