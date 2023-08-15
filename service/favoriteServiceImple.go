@@ -2,7 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/RaymondCode/simple-demo/model"
+	"github.com/gookit/slog"
+	"gorm.io/gorm"
 
 	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/proto"
@@ -27,13 +32,13 @@ func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *proto.Fav
 
 	switch *req.ActionType {
 	case 1:
-		err := dao.Like(userID, uint(*req.VideoId))
+		err := likeVideo(userID, uint(*req.VideoId))
 		if err != nil {
 			statusCode = ErrorCode
 			statusMsg = fmt.Sprintf("Failed to like video: %v", err)
 		}
 	case 2:
-		err := dao.Unlike(userID, uint(*req.VideoId))
+		err := unlike(userID, uint(*req.VideoId))
 		if err != nil {
 			statusCode = ErrorCode
 			statusMsg = fmt.Sprintf("Failed to unlike video: %v", err)
@@ -190,4 +195,62 @@ func GetUserInfoByID(requestingUserID *int64, userID int64) (*proto.User, error)
 	}
 
 	return user, nil
+}
+func likeVideo(userID uint, videoID uint) error {
+	// 使用特定的查询构造方式
+	// SELECT * FROM likes WHERE user_id = userID AND video_id = videoID;
+	dao.SetDefault(dao.DB)
+	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
+	if err != nil {
+		// 如果记录未找到
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 创建一个新的喜欢记录
+			like := model.Like{
+				UserID:  userID,
+				VideoID: videoID,
+				Liked:   1,
+			}
+			// 将新记录保存到数据库
+			return dao.DB.Create(&like).Error
+		} else {
+			// 如果发生其他错误，则返回该错误
+			return err
+		}
+	}
+
+	// 假设 first 是一个 *model.Like 类型
+	if first.Liked == 1 {
+		slog.Error("user has already liked this video")
+		return fmt.Errorf("user has already liked this video")
+	}
+
+	// 将喜欢的状态设置为1
+	first.Liked = 1
+	// 保存记录
+	return dao.DB.Save(&first).Error
+}
+func unlike(userID uint, videoID uint) error {
+	// 使用特定的查询构造方式
+	// SELECT * FROM likes WHERE user_id = userID AND video_id = videoID;
+	dao.SetDefault(dao.DB)
+	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
+	if err != nil {
+		// 如果记录未找到
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("No like found for this user and video")
+		}
+		// 如果发生其他错误，则返回该错误
+		return err
+	}
+
+	// 假设 first 是一个 *model.Like 类型
+	if first.Liked == 0 {
+		slog.Error("User has already unliked this video")
+		return fmt.Errorf("User has already unliked this video")
+	}
+
+	// 将喜欢的状态设置为0
+	first.Liked = 0
+	// 保存记录
+	return dao.DB.Save(&first).Error
 }

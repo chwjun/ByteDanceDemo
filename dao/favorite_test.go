@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLike(t *testing.T) {
+func TestLikeVideo(t *testing.T) {
 	// 定义你的测试用例，包括一个Like对象以及预期的结果
 	testCases := []struct {
 		like    model.Like
@@ -56,7 +56,7 @@ func TestLike(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := Like(tc.like.UserID, tc.like.VideoID)
+		err := LikeVideo(tc.like.UserID, tc.like.VideoID)
 		if tc.wantErr {
 			assert.Error(t, err)
 		} else {
@@ -64,7 +64,7 @@ func TestLike(t *testing.T) {
 
 			// 验证数据库中的值
 			like := model.Like{}
-			err = DB.Where("user_id = ? AND video_id = ?", tc.like.UserID, tc.like.VideoID).First(&like).Error
+			err = DB.Where(Like.UserID.Eq(tc.like.UserID), Like.VideoID.Eq(tc.like.VideoID)).First(&like).Error
 			assert.NoError(t, err)
 			assert.Equal(t, 1, like.Liked)
 		}

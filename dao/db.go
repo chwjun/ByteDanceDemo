@@ -35,4 +35,5 @@ func init() {
 	}
 
 	DB = db
+	SetDefault(DB)
 }
