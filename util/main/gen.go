@@ -11,7 +11,7 @@ func main() {
 	// Initialize the generator with configuration
 	g := gen.NewGenerator(gen.Config{
 		OutPath:       "dao", // output directory, default value is ./query
-		Mode:          gen.WithDefaultQuery | gen.WithQueryInterface | gen.WithoutContext,
+		Mode:          gen.WithDefaultQuery | gen.WithQueryInterface,
 		FieldNullable: true,
 	})
 
