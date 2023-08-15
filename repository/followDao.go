@@ -49,6 +49,7 @@ func NewFollowDaoInstance() *FollowDao {
 // FindEverFollowing 给定当前用户和目标用户id，查看曾经是否有关注关系。
 func (*FollowDao) FindEverFollowing(userId int64, targetId int64) (*model.Relation, error) {
 	f := dao.Relation
+
 	followList, err := f.Where(
 		f.UserID.Eq(userId),
 		f.FollowingID.Eq(targetId),
