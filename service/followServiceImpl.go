@@ -11,7 +11,7 @@ import (
 	"github.com/RaymondCode/simple-demo/config"
 	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
 	"github.com/RaymondCode/simple-demo/middleware/redis"
-	"github.com/RaymondCode/simple-demo/service/repository"
+	"github.com/RaymondCode/simple-demo/repository"
 )
 
 // FollowServiceImp 该结构体继承FollowService接口。

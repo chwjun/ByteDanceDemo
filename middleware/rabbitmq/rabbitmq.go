@@ -1,11 +1,12 @@
 package rabbitmq
 
 import (
-	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-const MQURL = "amqp://guest:guest@106.14.252.145:5672/"
+const MQURL = "amqp://guest:guest@43.140.203.85:5672/"
 
 var BaseRmq *RabbitMQ
 

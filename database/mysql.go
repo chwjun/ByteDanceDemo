@@ -3,6 +3,7 @@ package database
 
 import (
 	"fmt"
+
 	"github.com/gookit/slog"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -20,7 +21,7 @@ func Init() {
 	port := viper.GetString("settings.mysql.port")
 	schema := viper.GetString("settings.mysql.schema")
 	logLevel := viper.GetInt("settings.mysql.logLevel")
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=10000ms", username, password, host, port, schema)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", username, password, host, port, schema, "charset=utf8mb4&parseTime=True&loc=Local")
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.LogLevel(logLevel)),
 	})

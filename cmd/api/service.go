@@ -3,9 +3,13 @@ package api
 
 import (
 	config2 "github.com/RaymondCode/simple-demo/config"
+	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/database"
+	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
+	"github.com/RaymondCode/simple-demo/middleware/redis"
 	"github.com/RaymondCode/simple-demo/router"
-	"github.com/RaymondCode/simple-demo/service"
+
+	//"github.com/RaymondCode/simple-demo/service"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +22,11 @@ var (
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
 			database.Init()
-			go service.RunMessageServer()
+			redis.InitRedis()
+			rabbitmq.InitRabbitMQ()
+			rabbitmq.InitFollowRabbitMQ()
+			//	go service.RunMessageServer()
+			dao.SetDefault(database.DB)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()
