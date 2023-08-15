@@ -1,6 +1,6 @@
 package main
 
-import "github.com/RaymondCode/simple-demo/cmd"
+import "bytedancedemo/cmd"
 
 func main() {
 	cmd.Execute()

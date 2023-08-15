@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytedancedemo/model"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/model"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
