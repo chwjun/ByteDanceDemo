@@ -27,7 +27,7 @@ func (s *FavoriteServiceImpl) FavoriteAction(ctx context.Context, req *proto.Fav
 
 	switch *req.ActionType {
 	case 1:
-		err := dao.Like(userID, uint(*req.VideoId))
+		err := dao.LikeVideo(userID, uint(*req.VideoId))
 		if err != nil {
 			statusCode = ErrorCode
 			statusMsg = fmt.Sprintf("Failed to like video: %v", err)

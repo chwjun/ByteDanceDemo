@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Like(userID uint, videoID uint) error {
+func LikeVideo(userID uint, videoID uint) error {
 	like := model.Like{}
 	if err := DB.Where("user_id = ? AND video_id = ?", userID, videoID).First(&like).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
