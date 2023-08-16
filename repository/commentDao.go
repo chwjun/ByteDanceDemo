@@ -1,10 +1,9 @@
 package repository
 
 import (
-	"errors"
 	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/model"
-	"log"
+	"github.com/gookit/slog"
 	"time"
 )
 
@@ -24,52 +23,75 @@ func (Comment) TableName() string {
 	return "comment"
 }
 
-func InsertComment(comment Comment) (Comment, error) {
-	c := dao.comment
-	if err := Db.Model(Comment{}).Create(&comment).Error; err != nil {
-		log.Println(err.Error())
-		return Comment{}, err
+func InsertComment(comment model.Comment) (model.Comment, error) {
+	c := dao.Comment
+	err := c.Create(&comment)
+	if err != nil {
+		slog.Error(err)
+		return model.Comment{}, nil
 	}
 	return comment, nil
 }
 
 func DeleteComment(commentId int64) error {
-	var comment Comment
-	// 先查询是否有此评论
-	result := Db.Where("id = ?", commentId).
-		First(&comment)
-	if result.Error != nil {
-		return errors.New("del comment is not exist")
+	c := dao.Comment
+	_, err := c.Where(c.ID.Eq(commentId)).First()
+	if err != nil {
+		return err
 	}
-	// 删除评论，将action_type置为2
-	result = Db.Model(Comment{}).
-		Where("id=?", commentId).
-		Update("action_type", 2)
-	if result.Error != nil {
-		log.Println("Dao-DeleteComment: return del comment failed")
-		return result.Error
+	_, err = c.Where(c.ID.Eq(commentId)).Update(c.ActionType, 2)
+	if err != nil {
+		return err
 	}
 	return nil
+	//var comment Comment
+	//// 先查询是否有此评论
+	//result := Db.Where("id = ?", commentId).
+	//	First(&comment)
+	//if result.Error != nil {
+	//	return errors.New("del comment is not exist")
+	//}
+	//// 删除评论，将action_type置为2
+	//result = Db.Model(Comment{}).
+	//	Where("id=?", commentId).
+	//	Update("action_type", 2)
+	//if result.Error != nil {
+	//	log.Println("Dao-DeleteComment: return del comment failed")
+	//	return result.Error
+	//}
+	//return nil
 }
 
-func GetCommentList(videoId int64) ([]Comment, error) {
-	var commentList []Comment
-	result := Db.Model(Comment{}).Where(map[string]interface{}{"video_id": videoId, "action_type": 1}).
-		Order("created_at desc").
-		Find(&commentList)
-	if result.Error != nil {
-		log.Println(result.Error)
-		return commentList, errors.New("get comment list failed")
+func GetCommentList(videoId int64) ([]*model.Comment, error) {
+	c := dao.Comment
+	resList, err := c.Where(c.VideoID.Eq(videoId), c.ActionType.Eq("1")).Order(c.CreatedAt).Find()
+	if err != nil {
+		return nil, err
 	}
-	return commentList, nil
+	return resList, nil
+	//var commentList []Comment
+	//result := Db.Model(Comment{}).Where(map[string]interface{}{"video_id": videoId, "action_type": 1}).
+	//	Order("created_at desc").
+	//	Find(&commentList)
+	//if result.Error != nil {
+	//	log.Println(result.Error)
+	//	return commentList, errors.New("get comment list failed")
+	//}
+	//return commentList, nil
 }
 
 func GetCommentCnt(videoId int64) (int64, error) {
-	var count int64
-	result := Db.Model(Comment{}).Where(map[string]interface{}{"video_id": videoId, "action_type": 1}).
-		Count(&count)
-	if result.Error != nil {
-		return 0, errors.New("find comments count failed")
+	c := dao.Comment
+	cnt, err := c.Where(c.VideoID.Eq(videoId), c.ActionType.Eq("1")).Count()
+	if err != nil {
+		return 0, err
 	}
-	return count, nil
+	return cnt, nil
+	//var count int64
+	//result := Db.Model(Comment{}).Where(map[string]interface{}{"video_id": videoId, "action_type": 1}).
+	//	Count(&count)
+	//if result.Error != nil {
+	//	return 0, errors.New("find comments count failed")
+	//}
+	//return count, nil
 }
