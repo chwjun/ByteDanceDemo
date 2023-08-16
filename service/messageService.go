@@ -7,7 +7,7 @@ import (
 
 type MessageService interface {
 	//Send message function
-	SendMessage(userId int64, toUserId int64, content string) error
+	SendMessage(userId int64, toUserId int64, content string, actionType int64) error
 
 	//Get chat history function
 	GetChatHistory(userId int64, toUserId int64, searchTime time.Time) ([]controller.Message, error)
