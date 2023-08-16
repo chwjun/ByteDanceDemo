@@ -19,3 +19,12 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	}
 	return result, err
 }
+
+func GetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
+	V := dao.Video
+	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, err
+}
