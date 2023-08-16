@@ -5,7 +5,8 @@ settings:
     schema: douyin           # 数据库名
     username: root           # 用户名
     password: 123456         # 密码
-    logLevel: 1              # 日志等级 1-Silent 2-Error 3-Warn 4-Info
+    logLevel: 1   
+               # 日志等级 1-Silent 2-Error 3-Warn 4-Info
   jwt:
     secretKey: 123456        # jwt加密私钥
     expirationTime: 24       # token过期时间 （小时）

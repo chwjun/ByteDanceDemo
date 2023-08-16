@@ -3,6 +3,7 @@ package database
 
 import (
 	"fmt"
+
 	"github.com/gookit/slog"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -28,6 +29,7 @@ func Init() {
 		slog.Fatalf("mysql连接失败 %v", err)
 	} else {
 		slog.Debug("mysql连接成功")
+		fmt.Println("连接成功")
 	}
 	DB = db
 }

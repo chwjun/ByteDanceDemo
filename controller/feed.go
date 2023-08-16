@@ -1,7 +1,7 @@
 package controller
 
 import (
-	service "bytedancedemo/service"
+	"bytedancedemo/service"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -18,6 +18,7 @@ type FeedResponse struct {
 
 // 参数latest_time 和 token
 func Feed(c *gin.Context) {
+	var video_test = make([]Video, 10)
 	default_time := time.Now().UnixMilli()
 	var latest_time_str = c.DefaultQuery("latest_time", strconv.FormatInt(default_time, 10))
 	temp, err := strconv.ParseInt(latest_time_str, 10, 64)
@@ -27,11 +28,14 @@ func Feed(c *gin.Context) {
 	}
 	latest_time := time.UnixMilli(temp)
 	// 调用Service的Feed进行处理
-	video_list, next_time, err := service.Feed(latest_time)
-	
+	_, _, err = service.Feed(latest_time)
+	if err != nil {
+
+	}
+
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
-		VideoList: DemoVideos,
+		VideoList: video_test,
 		NextTime:  time.Now().Unix(),
 	})
 }

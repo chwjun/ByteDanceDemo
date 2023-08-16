@@ -1,25 +1,21 @@
 package database
 
 import (
+	"bytedancedemo/dao"
 	"bytedancedemo/model"
-	"fmt"
 	"time"
-
-	"gorm.io/gen/examples/dal/query"
 )
 
 const Video_list_size = 10
 
-func GetVideosByLatestTime(latest_time time.Time) ([]model.Video, error) {
-	videos_list := make([]model.Video, Video_list_size)
+func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	// 在这里查询
-	V := query.Video
-	result := V.Where("CreatedAt < ?", latest_time).Order("CreatedAt desc").Limit(Video_list_size).Find(&videos_list)
-	if result.Error != nil {
-		fmt.Println("获取视频失败")
+	V := dao.Video
+	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
+	//result := DB.Where("CreatedAt < ?", latest_time).Order("CreatedAt desc").Limit(Video_list_size).Find(&videos_list)
+	if err != nil {
+		result = nil
+		return nil, err
 	}
-	if result.RowsAffected == 0 {
-		fmt.Println("找不到视频了")
-	}
-	return videos_list, result.Error
+	return result, err
 }

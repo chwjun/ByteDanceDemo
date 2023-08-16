@@ -40,24 +40,23 @@ func Feed(latest_time time.Time) ([]ResponseVideo, time.Time, error) {
 		go func(video *model.Video) {
 
 			wait_group.Done()
-		}(&video)
+		}(video)
 		// 根据视频id找评论总数
 		go func(video *model.Video) {
 
 			wait_group.Done()
-		}(&video)
+		}(video)
 		// 根据视频id找点赞总数
 		go func(video *model.Video) {
 
 			wait_group.Done()
-		}(&video)
+		}(video)
 		// 根据当前用户id和视频id判断是否点赞了
 		go func(video *model.Video) {
 
 			wait_group.Done()
-		}(&video)
+		}(video)
 		wait_group.Wait()
-
 	}
 
 	return response_video_list, dao_video_list[len(dao_video_list)-1].CreatedAt, nil

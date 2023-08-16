@@ -5,7 +5,7 @@ import (
 	config2 "bytedancedemo/config"
 	"bytedancedemo/database"
 	"bytedancedemo/router"
-	"bytedancedemo/service"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var (
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
 			database.Init()
-			go service.RunMessageServer()
+			//go service.RunMessageServer()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()
