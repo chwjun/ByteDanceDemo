@@ -66,17 +66,32 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 		}(video, &temp_response_video)
 		// 根据视频id找评论总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-
+			comment_count, err := GetCommentCount(uint(video.ID))
+			if err == nil {
+				temp_response_video.Comment_count = int(comment_count)
+			} else {
+				return
+			}
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据视频id找点赞总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-
+			like_count, err := GetLikeCount(uint(video.ID))
+			if err == nil {
+				temp_response_video.Favorite_count = int(like_count)
+			} else {
+				return
+			}
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据当前用户id和视频id判断是否点赞了
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-
+			is_like, err := IsVideoLikedByUser(0, uint(video.ID))
+			if err == nil {
+				temp_response_video.Is_favorite = is_like
+			} else {
+				return
+			}
 			wait_group.Done()
 		}(video, &temp_response_video)
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
