@@ -1,8 +1,11 @@
 package service
 
 import (
+	"container/heap"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gookit/slog"
@@ -13,41 +16,195 @@ import (
 
 type FavoriteServiceImpl struct {
 }
+type Task struct {
+	UserID     uint
+	VideoID    uint
+	Action     int32 // 1 for like, 2 for unlike
+	RetryCount int
+}
 
-func (s *FavoriteServiceImpl) FavoriteAction(videoID int64, actionType int32) (FavoriteActionResponse, error) {
-	// 使用常量初始化默认值
+type Result struct {
+	Success    bool
+	Error      error
+	StatusCode int
+	StatusMsg  string
+}
+type TaskQueue struct {
+	tasks []*Task
+	mutex sync.Mutex
+}
+
+func NewTaskQueue() *TaskQueue {
+	return &TaskQueue{
+		tasks: make([]*Task, 0),
+	}
+}
+
+func (q *TaskQueue) Len() int {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	return len(q.tasks)
+}
+
+func (q *TaskQueue) Less(i, j int) bool {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	return q.tasks[i].Action < q.tasks[j].Action
+}
+
+func (q *TaskQueue) Swap(i, j int) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	q.tasks[i], q.tasks[j] = q.tasks[j], q.tasks[i]
+}
+func (q *TaskQueue) PushTask(task *Task) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	heap.Push(q, task)
+}
+
+func (q *TaskQueue) PopTask() *Task {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	return heap.Pop(q).(*Task)
+}
+
+func (q *TaskQueue) Push(x interface{}) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	item := x.(*Task)
+	q.tasks = append(q.tasks, item)
+}
+
+func (q *TaskQueue) Pop() interface{} {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	old := q.tasks
+	n := len(old)
+	item := old[n-1]
+	q.tasks = old[0 : n-1]
+	return item
+}
+
+// 实现heap.Interface
+func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit chan bool) {
+	var wg sync.WaitGroup
+	taskCh := make(chan Task)
+	go func() {
+		for {
+			select {
+			case <-quit:
+				return
+			default:
+				if tasks.Len() > 0 { // 检查是否还有任务
+					task := tasks.PopTask() // 使用新的PopTask方法
+					taskCh <- *task
+				}
+			}
+		}
+	}()
+
+	for i := 0; i < workerCount; i++ {
+		wg.Add(1)
+		go worker(taskCh, results, quit, tasks, &wg)
+	}
+
+	wg.Wait() // 等待所有工作协程完成
+}
+
+func shouldRetry(task Task) bool {
+	// 重试最多3次
+	if task.RetryCount < 3 {
+		return true
+	}
+	return false
+}
+func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueue *TaskQueue, wg *sync.WaitGroup) {
+	defer wg.Done() // 在工作协程结束时调用
+	for {
+
+		select {
+		case <-quit:
+			return
+		case task := <-tasks:
+			result := processTask(task)
+			if result.Error != nil && shouldRetry(task) {
+				task.RetryCount++                                        // 增加重试次数
+				time.Sleep(time.Second * time.Duration(task.RetryCount)) // 增加延迟
+				// 重新将任务推入堆中
+				taskQueue.PushTask(&task)
+			} else {
+				results <- result
+			}
+		}
+	}
+}
+
+func processTask(task Task) Result {
+	var err error
 	statusCode := SuccessCode
 	statusMsg := SuccessMessage
 
-	userID := uint(1)
-
-	switch actionType {
+	switch task.Action {
 	case 1:
-		err := likeVideo(userID, uint(videoID))
+		err = likeVideo(task.UserID, task.VideoID)
 		if err != nil {
 			statusCode = ErrorCode
 			statusMsg = fmt.Sprintf("Failed to like video: %v", err)
+		} else {
+			statusCode = SuccessCode
+			statusMsg = SuccessMessage
 		}
 	case 2:
-		err := unlike(userID, uint(videoID))
+		err = unlike(task.UserID, task.VideoID)
 		if err != nil {
 			statusCode = ErrorCode
 			statusMsg = fmt.Sprintf("Failed to unlike video: %v", err)
+		} else {
+			statusCode = SuccessCode
+			statusMsg = SuccessMessage
 		}
 	default:
-		err := fmt.Errorf("invalid action_type: %v", actionType)
+		err = fmt.Errorf("invalid action_type: %v", task.Action)
 		statusCode = ErrorCode
 		statusMsg = err.Error()
-		return FavoriteActionResponse{
-			StatusCode: statusCode,
-			StatusMsg:  statusMsg,
-		}, err
 	}
 
-	return FavoriteActionResponse{
-		StatusCode: statusCode,
+	return Result{
+		Success:    err == nil,
+		Error:      err,
+		StatusCode: int(statusCode),
 		StatusMsg:  statusMsg,
-	}, nil
+	}
+}
+
+func (s *FavoriteServiceImpl) FavoriteAction(videoID int64, actionType int32) (FavoriteActionResponse, error) {
+	taskQueue := NewTaskQueue()
+	heap.Init(taskQueue)
+
+	results := make(chan Result, 10)
+	quit := make(chan bool)
+
+	// 启动工人
+	startWorkers(5, taskQueue, results, quit)
+
+	task := &Task{
+		UserID:  1,
+		VideoID: uint(videoID),
+		Action:  actionType,
+	}
+	taskQueue.PushTask(task)
+
+	// 等待结果
+	result := <-results
+
+	// 关闭任务通道
+	close(quit)
+
+	return FavoriteActionResponse{
+		StatusCode: int32(result.StatusCode),
+		StatusMsg:  result.StatusMsg,
+	}, result.Error
 }
 
 func (s *FavoriteServiceImpl) FavoriteList(userID int64) (FavoriteListResponse, error) {
@@ -124,6 +281,62 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 	return videos, nil
 }
 
+func likeVideo(userID uint, videoID uint) error {
+	// 使用特定的查询构造方式
+	// SELECT * FROM likes WHERE user_id = userID AND video_id = videoID;
+	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
+	if err != nil {
+		// 如果记录未找到
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 创建一个新的喜欢记录
+			like := model.Like{
+				UserID:  userID,
+				VideoID: videoID,
+				Liked:   1,
+			}
+			// 将新记录保存到数据库
+			return dao.DB.Create(&like).Error
+		} else {
+			// 如果发生其他错误，则返回该错误
+			return err
+		}
+	}
+
+	// 假设 first 是一个 *model.Like 类型
+	if first.Liked == 1 {
+		slog.Error("user has already liked this video")
+		return fmt.Errorf("user has already liked this video")
+	}
+
+	// 将喜欢的状态设置为1
+	first.Liked = 1
+	// 保存记录
+	return dao.DB.Save(&first).Error
+}
+func unlike(userID uint, videoID uint) error {
+	// 使用特定的查询构造方式
+	// SELECT * FROM likes WHERE user_id = userID AND video_id = videoID;
+	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
+	if err != nil {
+		// 如果记录未找到
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("No like found for this user and video")
+		}
+		// 如果发生其他错误，则返回该错误
+		return err
+	}
+
+	// 假设 first 是一个 *model.Like 类型
+	if first.Liked == 0 {
+		slog.Error("User has already unliked this video")
+		return fmt.Errorf("User has already unliked this video")
+	}
+
+	// 将喜欢的状态设置为0
+	first.Liked = 0
+	// 保存记录
+	return dao.DB.Save(&first).Error
+}
 func (s *FavoriteServiceImpl) GetUserInfoByID(requestingUserID *int64, userID int64) (*User, error) {
 	// 使用特定的查询构造方式获取用户详情
 	name, avatar, backgroundImage, signature, err := GetUserDetailsByID(uint(userID))
@@ -182,63 +395,6 @@ func (s *FavoriteServiceImpl) GetUserInfoByID(requestingUserID *int64, userID in
 	}
 
 	return user, nil
-}
-
-func likeVideo(userID uint, videoID uint) error {
-	// 使用特定的查询构造方式
-	// SELECT * FROM likes WHERE user_id = userID AND video_id = videoID;
-	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
-	if err != nil {
-		// 如果记录未找到
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 创建一个新的喜欢记录
-			like := model.Like{
-				UserID:  userID,
-				VideoID: videoID,
-				Liked:   1,
-			}
-			// 将新记录保存到数据库
-			return dao.DB.Create(&like).Error
-		} else {
-			// 如果发生其他错误，则返回该错误
-			return err
-		}
-	}
-
-	// 假设 first 是一个 *model.Like 类型
-	if first.Liked == 1 {
-		slog.Error("user has already liked this video")
-		return fmt.Errorf("user has already liked this video")
-	}
-
-	// 将喜欢的状态设置为1
-	first.Liked = 1
-	// 保存记录
-	return dao.DB.Save(&first).Error
-}
-func unlike(userID uint, videoID uint) error {
-	// 使用特定的查询构造方式
-	// SELECT * FROM likes WHERE user_id = userID AND video_id = videoID;
-	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
-	if err != nil {
-		// 如果记录未找到
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("No like found for this user and video")
-		}
-		// 如果发生其他错误，则返回该错误
-		return err
-	}
-
-	// 假设 first 是一个 *model.Like 类型
-	if first.Liked == 0 {
-		slog.Error("User has already unliked this video")
-		return fmt.Errorf("User has already unliked this video")
-	}
-
-	// 将喜欢的状态设置为0
-	first.Liked = 0
-	// 保存记录
-	return dao.DB.Save(&first).Error
 }
 func GetUserDetailsByID(userID uint) (string, string, string, string, error) {
 
