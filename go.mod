@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/gavv/httpexpect/v2 v2.8.0
 	github.com/gin-gonic/gin v1.7.7
-	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gookit/slog v0.5.4
+	github.com/importcjj/sensitive v0.0.0-20200106142752-42d1c505be7b
 	github.com/juju/ratelimit v1.0.2
 	github.com/rabbitmq/amqp091-go v1.8.1
 	github.com/redis/go-redis/v9 v9.0.5

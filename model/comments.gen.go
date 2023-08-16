@@ -21,7 +21,7 @@ type Comment struct {
 	UserID     int64          `gorm:"column:user_id;type:bigint(20) unsigned;comment:发布评论的用户id" json:"user_id"`                        // 发布评论的用户id
 	VideoID    int64          `gorm:"column:video_id;type:bigint(20) unsigned;comment:评论视频的id" json:"video_id"`                        // 评论视频的id
 	Content    string         `gorm:"column:content;type:varchar(191);not null;comment:评论的内容" json:"content"`                          // 评论的内容
-	ActionType string         `gorm:"column:action_type;type:enum('1','2');not null;comment:评论行为，1表示已发布评论，2表示删除评论" json:"action_type"` // 评论行为，1表示已发布评论，2表示删除评论
+	ActionType  int64        `gorm:"column:action_type;type:enum('1','2');not null;comment:评论行为，1表示已发布评论，2表示删除评论" json:"action_type"` // 评论行为，1表示已发布评论，2表示删除评论
 }
 
 // TableName Comment's table name

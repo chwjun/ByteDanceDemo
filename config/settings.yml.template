@@ -1,11 +1,16 @@
 settings:
   mysql:
-    host: 127.0.0.1          # MySQL主机
-    port: 3306               # MySQL端口号
-    schema: douyin           # 数据库名
-    username: root           # 用户名
-    password: 123456         # 密码
-    logLevel: 1              # 日志等级 1-Silent 2-Error 3-Warn 4-Info
+    host: 43.140.203.85          # MySQL主机
+    port: 3306                   # MySQL端口号
+    schema: sample_douyin        # 数据库名
+    username: sample_douyin      # 用户名
+    password: sample_douyin      # 密码
+    logLevel: 1                  # 日志等级 1-Silent 2-Error 3-Warn 4-Info
+
+
+
+
+
   jwt:
     secretKey: 123456        # jwt加密私钥
     expirationTime: 24       # token过期时间 （小时）
