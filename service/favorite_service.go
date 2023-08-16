@@ -31,14 +31,12 @@ const (
 	SuccessMessage string = "Success"
 )
 
-type (
-	FavoriteService interface {
-		FavoriteAction(videoID int64, actionType int32) (FavoriteActionResponse, error)
-		FavoriteList(userID int64) (FavoriteListResponse, error)
-		GetUserInfoByID(requestingUserID *int64, userID int64) (*User, error)
-		GetFavoriteVideoInfoByUserID(userID int64) ([]*Video, error)
-	}
-)
+type FavoriteService interface {
+	FavoriteAction(videoID int64, actionType int32) (FavoriteActionResponse, error)
+	FavoriteList(userID int64) (FavoriteListResponse, error)
+	GetUserInfoByID(requestingUserID *int64, userID int64) (*User, error)
+	GetFavoriteVideoInfoByUserID(userID int64) ([]*Video, error)
+}
 
 type FavoriteActionResponse struct {
 	StatusCode int32
@@ -49,4 +47,6 @@ type FavoriteListResponse struct {
 	StatusCode int32
 	StatusMsg  string
 	VideoList  []*Video
+}
+type FavoriteServiceImpl struct {
 }
