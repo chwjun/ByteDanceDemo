@@ -53,7 +53,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 		temp_response_video := ResponseVideo{}
 		var wait_group sync.WaitGroup
 		wait_group.Add(5)
-		//根据视频id查作者信息
+		//根据作者id查作者信息
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
 			author_id := video.AuthorID
 			autor, err := videoService.GetUserDetailsById(author_id, &author_id)

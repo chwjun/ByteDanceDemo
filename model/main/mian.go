@@ -3,10 +3,11 @@ package main
 import (
 	"bytedancedemo/model"
 	"fmt"
+	"log"
+
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 )
 
 /*创建表并插入假数据*/
