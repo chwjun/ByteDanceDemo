@@ -2,7 +2,7 @@
 package gen
 
 import (
-	"github.com/RaymondCode/simple-demo/database/mysql"
+	"bytedancedemo/database/mysql"
 	"gorm.io/gen"
 )
 

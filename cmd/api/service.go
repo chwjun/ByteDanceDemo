@@ -2,12 +2,12 @@
 package api
 
 import (
-	"github.com/RaymondCode/simple-demo/api"
-	config2 "github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/database/mysql"
-	"github.com/RaymondCode/simple-demo/database/redis"
-	"github.com/RaymondCode/simple-demo/router"
+	"bytedancedemo/api"
+	config2 "bytedancedemo/config"
+	"bytedancedemo/dao"
+	"bytedancedemo/database/mysql"
+	"bytedancedemo/database/redis"
+	"bytedancedemo/router"
 	"github.com/spf13/cobra"
 )
 

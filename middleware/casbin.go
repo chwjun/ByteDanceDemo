@@ -2,8 +2,8 @@
 package middleware
 
 import (
+	"bytedancedemo/utils/casbin"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/utils/casbin"
 	"github.com/gin-gonic/gin"
 	"github.com/gookit/slog"
 	"net/http"

@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/RaymondCode/simple-demo/controller"
-	"github.com/RaymondCode/simple-demo/middleware"
+	"bytedancedemo/controller"
+	"bytedancedemo/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )

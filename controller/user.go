@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/RaymondCode/simple-demo/model"
-	"github.com/RaymondCode/simple-demo/service"
-	"github.com/RaymondCode/simple-demo/utils/token"
+	"bytedancedemo/model"
+	"bytedancedemo/service"
+	"bytedancedemo/utils/token"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/spf13/viper"

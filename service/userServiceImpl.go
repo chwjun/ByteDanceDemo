@@ -2,8 +2,8 @@
 package service
 
 import (
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/model"
+	"bytedancedemo/dao"
+	"bytedancedemo/model"
 	"github.com/gookit/slog"
 	"github.com/spf13/viper"
 	"sync"

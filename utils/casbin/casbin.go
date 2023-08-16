@@ -2,7 +2,7 @@
 package casbin
 
 import (
-	"github.com/RaymondCode/simple-demo/database/mysql"
+	"bytedancedemo/database/mysql"
 	"github.com/casbin/casbin/v2"
 	gormAdapter "github.com/casbin/gorm-adapter/v2"
 	"github.com/gookit/slog"

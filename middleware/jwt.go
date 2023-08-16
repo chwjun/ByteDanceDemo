@@ -2,8 +2,8 @@
 package middleware
 
 import (
+	"bytedancedemo/utils/token"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/utils/token"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"net/http"

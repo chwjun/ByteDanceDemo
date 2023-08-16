@@ -1,4 +1,4 @@
-module github.com/RaymondCode/simple-demo
+module bytedancedemo
 
 go 1.20
 
