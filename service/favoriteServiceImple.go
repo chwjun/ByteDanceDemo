@@ -364,6 +364,7 @@ func unlike(userID uint, videoID uint) error {
 	// 提交事务
 	return tx.Commit().Error
 }
+
 func (s *FavoriteServiceImpl) GetUserInfoByID(requestingUserID *int64, userID int64) (*User, error) {
 	// 使用特定的查询构造方式获取用户详情
 	name, avatar, backgroundImage, signature, err := GetUserDetailsByID(uint(userID))
