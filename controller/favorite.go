@@ -13,6 +13,13 @@ type FavoriteActionRequest struct {
 }
 
 func FavoriteAction(c *gin.Context) {
+	favoriteServiceInterface, _ := c.Get("favoriteService")
+	favoriteService, ok := favoriteServiceInterface.(*service.FavoriteServiceImpl)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get favorite service"})
+		return
+	}
+	userId := uint(1)
 	var req FavoriteActionRequest
 
 	// 尝试将请求数据绑定到我们的请求结构中
@@ -21,11 +28,8 @@ func FavoriteAction(c *gin.Context) {
 		return
 	}
 
-	// 创建服务
-	s := service.FavoriteServiceImpl{}
-
 	// 调用服务层的FavoriteAction方法
-	resp, err := s.FavoriteAction(req.VideoID, req.ActionType)
+	resp, err := favoriteService.FavoriteAction(userId, req.VideoID, req.ActionType)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

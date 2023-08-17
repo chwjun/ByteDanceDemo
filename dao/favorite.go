@@ -131,3 +131,88 @@ package dao
 //	// 如果 count 大于 0，表示用户点赞了视频
 //	return count > 0, nil
 //}
+
+//func likeVideo(userID uint, videoID uint) error {
+//	// 开始一个新的事务
+//	tx := dao.DB.Begin()
+//	if tx.Error != nil {
+//		return tx.Error
+//	}
+//
+//	// 使用特定的查询构造方式
+//	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
+//	if err != nil {
+//		// 如果记录未找到
+//		if errors.Is(err, gorm.ErrRecordNotFound) {
+//			// 创建一个新的喜欢记录
+//			like := model.Like{
+//				UserID:  userID,
+//				VideoID: videoID,
+//				Liked:   1,
+//			}
+//			// 将新记录保存到数据库
+//			if err := tx.Create(&like).Error; err != nil {
+//				tx.Rollback() // 回滚事务
+//				return err
+//			}
+//		} else {
+//			// 如果发生其他错误，则回滚事务并返回该错误
+//			tx.Rollback()
+//			return err
+//		}
+//	}
+//
+//	// 假设 first 是一个 *model.Like 类型
+//	if first.Liked == 1 {
+//		tx.Rollback() // 回滚事务
+//		return fmt.Errorf("user has already liked this video")
+//	}
+//
+//	// 将喜欢的状态设置为1
+//	first.Liked = 1
+//	// 保存记录
+//	if err := tx.Save(&first).Error; err != nil {
+//		tx.Rollback() // 回滚事务
+//		return err
+//	}
+//
+//	// 提交事务
+//	return tx.Commit().Error
+//}
+//func unlike(userID uint, videoID uint) error {
+//	// 开始一个新的事务
+//	tx := dao.DB.Begin()
+//	if tx.Error != nil {
+//		return tx.Error
+//	}
+//
+//	// 使用特定的查询构造方式
+//	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
+//	if err != nil {
+//		// 如果记录未找到
+//		if errors.Is(err, gorm.ErrRecordNotFound) {
+//			tx.Rollback() // 回滚事务
+//			return fmt.Errorf("No like found for this user and video")
+//		}
+//		// 如果发生其他错误，则回滚事务并返回该错误
+//		tx.Rollback()
+//		return err
+//	}
+//
+//	// 假设 first 是一个 *model.Like 类型
+//	if first.Liked == 0 {
+//		tx.Rollback() // 回滚事务
+//		return fmt.Errorf("User has already unliked this video")
+//	}
+//
+//	// 将喜欢的状态设置为0
+//	first.Liked = 0
+//	// 保存记录
+//	if err := tx.Save(&first).Error; err != nil {
+//		tx.Rollback() // 回滚事务
+//		return err
+//	}
+//
+//	// 提交事务
+//	return tx.Commit().Error
+//}

@@ -1,5 +1,7 @@
 package service
 
+import "github.com/RaymondCode/simple-demo/util"
+
 type User struct {
 	ID              int64
 	Name            string
@@ -49,4 +51,11 @@ type FavoriteListResponse struct {
 	VideoList  []*Video
 }
 type FavoriteServiceImpl struct {
+	RedisClient *util.RedisClient
+}
+
+func NewFavoriteService(redisAddr string, redisPassword string, redisDB int) *FavoriteServiceImpl {
+	return &FavoriteServiceImpl{
+		RedisClient: util.NewRedisClient(redisAddr, redisPassword, redisDB),
+	}
 }

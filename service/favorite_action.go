@@ -2,28 +2,23 @@ package service
 
 import (
 	"container/heap"
+	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/RaymondCode/simple-demo/dao"
+	"github.com/gookit/slog"
+
 	"github.com/RaymondCode/simple-demo/model"
-	"github.com/pkg/errors"
+
+	"github.com/RaymondCode/simple-demo/dao"
+
 	"gorm.io/gorm"
 
 	"github.com/RaymondCode/simple-demo/util"
 )
-
-type FavoriteAction struct {
-	redisClient *util.RedisClient
-}
-
-func NewFavoriteService(redisAddr string, redisPassword string, redisDB int) *FavoriteServiceImpl {
-	return &FavoriteServiceImpl{
-		redisClient: util.NewRedisClient(redisAddr, redisPassword, redisDB),
-	}
-}
 
 type Task struct {
 	UserID     uint
@@ -44,6 +39,7 @@ type TaskQueue struct {
 }
 
 func NewTaskQueue() *TaskQueue {
+	slog.Debug("NewTaskQueue")
 	return &TaskQueue{
 		tasks: make([]*Task, 0),
 	}
@@ -52,7 +48,9 @@ func NewTaskQueue() *TaskQueue {
 func (q *TaskQueue) Len() int {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	return len(q.tasks)
+	length := len(q.tasks)
+	slog.Debug("TaskQueue length:", length)
+	return length
 }
 
 func (q *TaskQueue) Less(i, j int) bool {
@@ -66,23 +64,38 @@ func (q *TaskQueue) Swap(i, j int) {
 	defer q.mutex.Unlock()
 	q.tasks[i], q.tasks[j] = q.tasks[j], q.tasks[i]
 }
-func (q *TaskQueue) PushTask(task *Task) {
+func (q *TaskQueue) PushTask(task *Task, dispatchSignal chan bool) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	heap.Push(q, task)
+	q.tasks = append(q.tasks, task) // 直接将任务添加到队列
+	heap.Fix(q, len(q.tasks)-1)     // 重新调整堆
+	slog.Debug("Pushed task to queue: %+v", task)
+	dispatchSignal <- true // 发送信号
+	slog.Debug("Dispatch signal sent")
 }
 
 func (q *TaskQueue) PopTask() *Task {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	return heap.Pop(q).(*Task)
+	task := heap.Pop(q).(*Task)
+	slog.Debug("Popped task from queue: %+v", task)
+	return task
 }
 
 func (q *TaskQueue) Push(x interface{}) {
+	slog.Debug("Push: acquiring lock")
 	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	item := x.(*Task)
+	defer func() {
+		q.mutex.Unlock()
+		slog.Debug("Push: releasing lock")
+	}()
+	item, ok := x.(*Task)
+	if !ok {
+		slog.Fatal("Push: Expected *Task, got something else")
+		return
+	}
 	q.tasks = append(q.tasks, item)
+	slog.Debug("Push: task appended")
 }
 
 func (q *TaskQueue) Pop() interface{} {
@@ -96,29 +109,36 @@ func (q *TaskQueue) Pop() interface{} {
 }
 
 // 实现heap.Interface
-func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit chan bool, redisClient *util.RedisClient) {
+func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit chan bool, redisClient *util.RedisClient, dispatchSignal chan bool) {
 	var wg sync.WaitGroup
 	taskCh := make(chan Task)
+
+	slog.Debug("Starting task dispatcher")
+
 	go func() {
 		for {
 			select {
-			case <-quit:
-				return
-			default:
-				if tasks.Len() > 0 { // 检查是否还有任务
-					task := tasks.PopTask() // 使用新的PopTask方法
+			case <-dispatchSignal:
+				if tasks.Len() > 0 {
+					task := tasks.PopTask()
+					slog.Debug("Dispatching task:", task)
 					taskCh <- *task
 				}
 			}
 		}
 	}()
 
+	slog.Debug("Starting workers")
+
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
+		slog.Debug("Starting worker", i)
 		go worker(taskCh, results, quit, tasks, &wg, redisClient)
 	}
 
 	wg.Wait() // 等待所有工作协程完成
+
+	slog.Debug("All workers have finished")
 }
 
 func shouldRetry(task Task) bool {
@@ -134,14 +154,16 @@ func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueu
 
 		select {
 		case <-quit:
+			slog.Debug("Worker stopped.")
 			return
 		case task := <-tasks:
+			slog.Debug("Processing task: %+v", task)
 			result := processTask(task, redisClient)
 			if result.Error != nil && shouldRetry(task) {
 				task.RetryCount++                                        // 增加重试次数
 				time.Sleep(time.Second * time.Duration(task.RetryCount)) // 增加延迟
 				// 重新将任务推入堆中
-				taskQueue.PushTask(&task)
+				taskQueue.PushTask(&task, make(chan bool))
 			} else {
 				results <- result
 			}
@@ -156,9 +178,9 @@ func processTask(task Task, redisClient *util.RedisClient) Result {
 
 	switch task.Action {
 	case 1:
-		err = redisClient.IncrementLikes(task.VideoID)
+		err = redisClient.LikeVideo(task.UserID, task.VideoID)
 	case 2:
-		err = redisClient.DecrementLikes(task.VideoID)
+		err = redisClient.UnlikeVideo(task.UserID, task.VideoID)
 	default:
 		err = fmt.Errorf("invalid action_type: %v", task.Action)
 		statusCode = ErrorCode
@@ -173,142 +195,138 @@ func processTask(task Task, redisClient *util.RedisClient) Result {
 	}
 }
 
-// 其他代码不变
+func SyncLikesToDatabase(redisClient *util.RedisClient) error {
+	videoIDs, err := getAllVideoIDs() // 获取所有视频ID
+	if err != nil {
+		return err
+	}
 
-func startSyncTask(redisClient *util.RedisClient, syncInterval time.Duration) {
+	for _, videoID := range videoIDs {
+		likes, err := redisClient.GetLikes(videoID)
+		if err != nil {
+			return err
+		}
+
+		for userIDString, likedString := range likes {
+			userID, err := strconv.Atoi(userIDString)
+			if err != nil {
+				return err // 或者可以记录错误并继续
+			}
+			liked, err := strconv.Atoi(likedString)
+			if err != nil {
+				return err // 或者可以记录错误并继续
+			}
+
+			// 开始一个新的事务
+			tx := dao.DB.Begin()
+			if tx.Error != nil {
+				return tx.Error
+			}
+
+			first, err := dao.Like.Where(dao.Like.UserID.Eq(uint(userID)), dao.Like.VideoID.Eq(uint(videoID))).First()
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					// 如果记录未找到，则创建一个新的喜欢记录
+					like := model.Like{
+						UserID:  uint(userID),
+						VideoID: uint(videoID),
+						Liked:   int(uint(liked)),
+					}
+					if err := tx.Create(&like).Error; err != nil {
+						tx.Rollback() // 回滚事务
+						return err
+					}
+				} else {
+					// 如果发生其他错误，则回滚事务并返回该错误
+					tx.Rollback()
+					return err
+				}
+			} else {
+				// 如果记录存在，则更新点赞状态
+				first.Liked = int(uint(liked))
+				if err := tx.Save(&first).Error; err != nil {
+					tx.Rollback() // 回滚事务
+					return err
+				}
+			}
+
+			// 提交事务
+			if err := tx.Commit().Error; err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func getAllVideoIDs() ([]uint, error) {
+	videos := dao.Video // 假设您有一个名为dao的包，其中有一个Video的DAO对象
+
+	var videoIDs []uint
+	ids, err := videos.Select(videos.ID).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, id := range ids {
+		videoIDs = append(videoIDs, id.ID) // 假设ID是Video中的一个字段
+	}
+
+	return videoIDs, nil
+}
+
+func StartSyncTask(redisClient *util.RedisClient, db *gorm.DB, syncInterval time.Duration) {
 	ticker := time.NewTicker(syncInterval)
 	defer ticker.Stop()
-
-	syncFunc := func(videoID uint, likes int64) error {
-		// 这里填写同步到数据库的逻辑
-		// 例如，更新数据库中对应视频的点赞数
-		return nil
-	}
 
 	for {
 		select {
 		case <-ticker.C:
-			if err := redisClient.SyncLikesToDatabase(syncFunc); err != nil {
+			if err := SyncLikesToDatabase(redisClient); err != nil {
 				log.Printf("Failed to sync likes to database: %v", err)
 			}
 		}
 	}
 }
-func getAllVideoIDs() []uint {
-	// 这里您可以从数据库或其他存储中获取所有的视频ID
-	// 返回一个uint类型的切片
-	return []uint{} // 示例返回空切片
-}
 
-func (s *FavoriteServiceImpl) FavoriteAction(videoID int64, actionType int32) (FavoriteActionResponse, error) {
+func (s *FavoriteServiceImpl) FavoriteAction(userId uint, videoID int64, actionType int32) (FavoriteActionResponse, error) {
+	slog.Debug("Starting FavoriteAction for videoID:", videoID, "actionType:", actionType)
+	dispatchSignal := make(chan bool)
 	taskQueue := NewTaskQueue()
+
+	task := &Task{
+		UserID:  userId,
+		VideoID: uint(videoID),
+		Action:  actionType,
+	}
+	taskQueue.PushTask(task, dispatchSignal)
+
 	heap.Init(taskQueue)
+
+	slog.Debug("TaskQueue initialized")
 
 	results := make(chan Result, 10)
 	quit := make(chan bool)
 
 	// 启动工人
-	startWorkers(5, taskQueue, results, quit, s.redisClient)
+	startWorkers(5, taskQueue, results, quit, s.RedisClient, dispatchSignal)
 
-	task := &Task{
-		UserID:  1,
-		VideoID: uint(videoID),
-		Action:  actionType,
-	}
-	taskQueue.PushTask(task)
+	slog.Debug("Workers started")
+
+	slog.Debug("Task pushed to the queue:", task)
 
 	// 等待结果
+	slog.Debug("Waiting for results")
 	result := <-results
+
+	slog.Debug("Results received:", result)
 
 	// 关闭任务通道
 	close(quit)
+	slog.Debug("FavoriteAction completed for videoID:", videoID)
 
 	return FavoriteActionResponse{
 		StatusCode: int32(result.StatusCode),
 		StatusMsg:  result.StatusMsg,
 	}, result.Error
-}
-func likeVideo(userID uint, videoID uint) error {
-	// 开始一个新的事务
-	tx := dao.DB.Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-
-	// 使用特定的查询构造方式
-	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
-	if err != nil {
-		// 如果记录未找到
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 创建一个新的喜欢记录
-			like := model.Like{
-				UserID:  userID,
-				VideoID: videoID,
-				Liked:   1,
-			}
-			// 将新记录保存到数据库
-			if err := tx.Create(&like).Error; err != nil {
-				tx.Rollback() // 回滚事务
-				return err
-			}
-		} else {
-			// 如果发生其他错误，则回滚事务并返回该错误
-			tx.Rollback()
-			return err
-		}
-	}
-
-	// 假设 first 是一个 *model.Like 类型
-	if first.Liked == 1 {
-		tx.Rollback() // 回滚事务
-		return fmt.Errorf("user has already liked this video")
-	}
-
-	// 将喜欢的状态设置为1
-	first.Liked = 1
-	// 保存记录
-	if err := tx.Save(&first).Error; err != nil {
-		tx.Rollback() // 回滚事务
-		return err
-	}
-
-	// 提交事务
-	return tx.Commit().Error
-}
-func unlike(userID uint, videoID uint) error {
-	// 开始一个新的事务
-	tx := dao.DB.Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-
-	// 使用特定的查询构造方式
-	first, err := dao.Like.Where(dao.Like.UserID.Eq(userID), dao.Like.VideoID.Eq(videoID)).First()
-	if err != nil {
-		// 如果记录未找到
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			tx.Rollback() // 回滚事务
-			return fmt.Errorf("No like found for this user and video")
-		}
-		// 如果发生其他错误，则回滚事务并返回该错误
-		tx.Rollback()
-		return err
-	}
-
-	// 假设 first 是一个 *model.Like 类型
-	if first.Liked == 0 {
-		tx.Rollback() // 回滚事务
-		return fmt.Errorf("User has already unliked this video")
-	}
-
-	// 将喜欢的状态设置为0
-	first.Liked = 0
-	// 保存记录
-	if err := tx.Save(&first).Error; err != nil {
-		tx.Rollback() // 回滚事务
-		return err
-	}
-
-	// 提交事务
-	return tx.Commit().Error
 }

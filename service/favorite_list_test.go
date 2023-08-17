@@ -1,6 +1,6 @@
 package service
 
-//
+//上面这个函数的写法，请参照下面的这些函数的写法。
 //import (
 //	"context"
 //	"testing"
