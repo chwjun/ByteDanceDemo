@@ -1,14 +1,15 @@
 package rabbitmq
 
 import (
+	"fmt"
+	"github.com/spf13/viper"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-const MQURL = "amqp://guest:guest@43.140.203.85:5672/"
-
 var BaseRmq *RabbitMQ
+var MQURL string
 
 // RabbitMQ 参考: https://www.rabbitmq.com/tutorials/tutorial-one-go.html
 type RabbitMQ struct {
@@ -19,6 +20,12 @@ type RabbitMQ struct {
 }
 
 func InitRabbitMQ() {
+	MQURL = fmt.Sprintf("amqp://%s:%s@%s:%s/",
+		viper.GetString("settings.rabbitMQ.username"),
+		viper.GetString("settings.rabbitMQ.password"),
+		viper.GetString("settings.rabbitMQ.host"),
+		viper.GetString("settings.rabbitMQ.port"),
+	)
 	BaseRmq = &RabbitMQ{
 		MqUrl: MQURL,
 	}

@@ -59,7 +59,7 @@ func (usi *UserServiceImpl) GetUserDetailsById(id int64, curID *int64) (*User, e
 	}
 	u := dao.User
 	resList, err := u.Where(u.ID.Eq(id)).Find()
-	if err != nil {
+	if err != nil || len(resList) == 0 {
 		slog.Fatalf("查询用户失败 %v", err)
 		return nil, err
 	}

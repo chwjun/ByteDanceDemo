@@ -24,6 +24,7 @@ var (
 			database.Init()
 			redis.InitRedis()
 			rabbitmq.InitRabbitMQ()
+			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()
 			//	go service.RunMessageServer()
 			dao.SetDefault(database.DB)

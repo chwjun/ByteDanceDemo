@@ -7,7 +7,6 @@ import (
 )
 
 const OSS_USER_AVATAR_DIR = "your_avatar_directory_here"
-const ExpireTime = 100
 
 const GO_STARTER_TIME = "2006-01-02 15:04:05"
 

@@ -2,7 +2,9 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 	"log"
 	"time"
 )
@@ -35,13 +37,20 @@ var RdbUVid *redis.Client
 // RdbVUid 根据videoId找到点赞过它的userId
 var RdbVUid *redis.Client
 
-const (
-	ProdRedisAddr = "ip:port"
-	ProRedisPwd   = "redis-passwd"
+var (
+	ProdRedisAddr string
+	ProRedisPwd   string
+	ExpireTime    time.Duration
 )
 
 // InitRedis 初始化 Redis 连接，redis 默认 16 个 DB
 func InitRedis() {
+	ProdRedisAddr = fmt.Sprintf("%s:%s",
+		viper.GetString("settings.redis.host"),
+		viper.GetString("settings.redis.port"),
+	)
+	ProRedisPwd = viper.GetString("settings.redis.password")
+	ExpireTime = viper.GetDuration("settings.redis.expirationTime") * time.Second
 	RdbTest = redis.NewClient(&redis.Options{
 		Addr:     ProdRedisAddr,
 		Password: ProRedisPwd,

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/RaymondCode/simple-demo/model"
-
 	"github.com/RaymondCode/simple-demo/service"
 	"github.com/RaymondCode/simple-demo/utils/sensetive"
 	"github.com/gin-gonic/gin"
@@ -48,6 +47,7 @@ func CommentAction(c *gin.Context) {
 	// 评论
 	if actionType == 1 {
 		content := c.Query("comment_text")
+		sensetive.InitFilter()
 		content = sensetive.Filter.Replace(content, '#')
 		var comment model.Comment
 		comment.UserID = userId

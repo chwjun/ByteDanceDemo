@@ -223,9 +223,9 @@ func insertRedisVCId(videoId string, commentId string, comment Comment) {
 		return
 	}
 	// 设置键的有效期，为数据不一致情况兜底
-	redis.RdbVCid.Expire(redis.Ctx, videoId, config.ExpireTime)
+	redis.RdbVCid.Expire(redis.Ctx, videoId, redis.ExpireTime)
 	// 设置键的有效期，为数据不一致情况兜底
-	_, err = redis.RdbCVid.Set(redis.Ctx, commentId, videoId, config.ExpireTime).Result()
+	_, err = redis.RdbCVid.Set(redis.Ctx, commentId, videoId, redis.ExpireTime).Result()
 	if err != nil {
 		log.Println("redis save fail:cId-vId")
 		return
@@ -235,7 +235,7 @@ func insertRedisVCId(videoId string, commentId string, comment Comment) {
 		log.Println("serialize failed in redis save", err)
 	}
 	// 设置键的有效期，为数据不一致情况兜底
-	_, err = redis.RdbCIdComment.Set(redis.Ctx, commentId, string(b), config.ExpireTime).Result()
+	_, err = redis.RdbCIdComment.Set(redis.Ctx, commentId, string(b), redis.ExpireTime).Result()
 	if err != nil {
 		log.Println("redis save fail:cId-comment")
 		return
