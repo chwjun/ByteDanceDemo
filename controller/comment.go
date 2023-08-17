@@ -1,9 +1,8 @@
 package controller
 
 import (
-	//"ByteDanceDemo/dao"
-	//"ByteDanceDemo/service"
-	"github.com/RaymondCode/simple-demo/repository"
+	"github.com/RaymondCode/simple-demo/model"
+
 	"github.com/RaymondCode/simple-demo/service"
 	"github.com/RaymondCode/simple-demo/utils/sensetive"
 	"github.com/gin-gonic/gin"
@@ -50,13 +49,13 @@ func CommentAction(c *gin.Context) {
 	if actionType == 1 {
 		content := c.Query("comment_text")
 		content = sensetive.Filter.Replace(content, '#')
-		var comment repository.Comment
-		comment.UserId = userId
-		comment.VideoId = videoId
+		var comment model.Comment
+		comment.UserID = userId
+		comment.VideoID = videoId
 		comment.Content = content
 		timeNow := time.Now()
 		comment.CreatedAt = timeNow
-		comment.ActionType = 1
+		comment.ActionType = strconv.Itoa(1)
 		//调用service发表评论
 		commentRes, err := commentService.CommentAction(comment)
 		//发表品论失败

@@ -7,6 +7,7 @@ import (
 	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/database"
 	"github.com/RaymondCode/simple-demo/model"
+	"strconv"
 	"testing"
 )
 
@@ -46,7 +47,7 @@ func TestInsertComment(t *testing.T) {
 		UserID:     3,
 		VideoID:    3,
 		Content:    "测试插入评论",
-		ActionType: 1,
+		ActionType: strconv.Itoa(1),
 	})
 	fmt.Printf("err = %v\n", err)
 	fmt.Printf("res = %v\n", comment)

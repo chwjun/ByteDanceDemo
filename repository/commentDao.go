@@ -4,17 +4,16 @@ import (
 	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gookit/slog"
-	"time"
 )
 
 type Comment struct {
-	Id         int64     //评论id
-	UserId     int64     //评论用户id
-	VideoId    int64     //视频id
-	Content    string    //评论内容
-	ActionType int64     //发布评论为1，取消评论为2
-	CreatedAt  time.Time //评论发布的日期mm-dd
-	UpdatedAt  time.Time
+	//Id         int64     //评论id
+	//UserId     int64     //评论用户id
+	//VideoId    int64     //视频id
+	//Content    string    //评论内容
+	//ActionType int64     //发布评论为1，取消评论为2
+	//CreatedAt  time.Time //评论发布的日期mm-dd
+	//UpdatedAt  time.Time
 	model.Comment
 }
 

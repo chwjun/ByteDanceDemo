@@ -5,6 +5,7 @@ import (
 	"github.com/RaymondCode/simple-demo/config"
 	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
 	"github.com/RaymondCode/simple-demo/middleware/redis"
+	"github.com/RaymondCode/simple-demo/model"
 	"github.com/RaymondCode/simple-demo/repository"
 	"log"
 	"math/rand"
@@ -32,21 +33,21 @@ func GetCommentServiceInstance() *CommentServiceImpl {
 	return commentServiceImpl
 }
 
-func (commentService *CommentServiceImpl) CommentAction(comment repository.Comment) (Comment, error) {
+func (commentService *CommentServiceImpl) CommentAction(comment model.Comment) (Comment, error) {
 	csi := GetCommentServiceInstance()
 	commentRes, err := repository.InsertComment(comment)
 	if err != nil {
 		return Comment{}, err
 	}
 	//GetUserLoginInfoById(id int64) (User, error)
-	user, err := csi.GetUserDetailsById(comment.UserId, nil)
+	user, err := csi.GetUserDetailsById(comment.UserID, nil)
 	if err != nil {
 		log.Println(err.Error())
 	}
 	// 随机数生成种子
 	rand.Seed(time.Now().Unix())
 	commentData := Comment{
-		Id:         commentRes.Id,
+		Id:         commentRes.ID,
 		User:       user,
 		Content:    commentRes.Content,
 		CreateDate: commentRes.CreatedAt.Format(config.GO_STARTER_TIME),
@@ -55,7 +56,7 @@ func (commentService *CommentServiceImpl) CommentAction(comment repository.Comme
 	}
 	// redis操作：将发表的评论id存入redis
 	go func() {
-		insertRedisVCId(strconv.FormatInt(comment.VideoId, 10), strconv.FormatInt(commentRes.Id, 10), commentData)
+		insertRedisVCId(strconv.FormatInt(comment.VideoID, 10), strconv.FormatInt(commentRes.ID, 10), commentData)
 		log.Println("commentAction save in redis")
 	}()
 
@@ -151,13 +152,13 @@ func (commentService *CommentServiceImpl) GetCommentList(videoId int64, userId i
 	wg.Add(n)
 	for _, comment := range plainCommentList {
 		var commentData Comment
-		go func(comment repository.Comment) {
+		go func(comment model.Comment) {
 			commentService.CombineComment(&commentData, &comment)
 			commentInfoList = append(commentInfoList, commentData)
-			commentIdToStr := strconv.FormatInt(comment.Id, 10)
+			commentIdToStr := strconv.FormatInt(comment.ID, 10)
 			insertRedisVCId(videoIdToStr, commentIdToStr, commentData)
 			wg.Done()
-		}(comment)
+		}(*comment)
 
 	}
 	wg.Wait()
@@ -183,15 +184,15 @@ func (commentService *CommentServiceImpl) GetCommentList(videoId int64, userId i
 	return commentInfoList, nil
 }
 
-func (commentService *CommentServiceImpl) CombineComment(comment *Comment, plainComment *repository.Comment) error {
+func (commentService *CommentServiceImpl) CombineComment(comment *Comment, plainComment *model.Comment) error {
 	commentServiceNew := GetCommentServiceInstance()
-	user, err := commentServiceNew.GetUserDetailsById(plainComment.UserId, nil)
+	user, err := commentServiceNew.GetUserDetailsById(plainComment.UserID, nil)
 	if err == nil {
 		comment.User = user
 	}
 	// 随机数生成种子
 	rand.Seed(time.Now().Unix())
-	comment.Id = plainComment.Id
+	comment.Id = plainComment.ID
 	comment.Content = plainComment.Content
 	comment.CreateDate = plainComment.CreatedAt.Format(config.GO_STARTER_TIME)
 	comment.LikeCount = int64(rand.Intn(100))
