@@ -1,11 +1,12 @@
 package repository
 
 import (
-	"log"
-	"sync"
-
+	"bytedancedemo/config"
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
+	"log"
+	"sync"
+	"time"
 )
 
 type Follow struct {
@@ -77,12 +78,16 @@ func (*FollowDao) FindEverFollowing(userId int64, targetId int64) (*model.Relati
 
 // InsertFollowRelation 给定用户和目标对象id，插入其关注关系。
 func (*FollowDao) InsertFollowRelation(userId int64, targetId int64) (bool, error) {
-
+	startTimeStr := time.Now().Format(config.GO_STARTER_TIME)
+	startTime, er := time.Parse(config.GO_STARTER_TIME, startTimeStr)
+	if er != nil {
+		log.Println(er)
+	}
 	follow := &model.Relation{
 		UserID:      userId,
 		FollowingID: targetId,
 		Followed:    1,
-		//CreatedAt:   time.Now().Format(config.GO_STARTER_TIME),
+		CreatedAt:   startTime,
 	}
 
 	// 将关注关系插入到数据库

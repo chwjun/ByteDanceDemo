@@ -7,6 +7,7 @@ import (
 )
 
 const OSS_USER_AVATAR_DIR = "your_avatar_directory_here"
+const GO_STARTER_TIME = "2006-01-02 15:04:05"
 
 // 视频模块相关配置
 const (
