@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -25,6 +26,7 @@ type Task struct {
 	VideoID    uint
 	Action     int32 // 1 for like, 2 for unlike
 	RetryCount int
+	ResultChan chan<- Result // 用于返回结果的通道
 }
 
 type Result struct {
@@ -98,7 +100,7 @@ func (q *TaskQueue) Pop() interface{} {
 	return item
 }
 
-func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit chan bool, redisClient *util.RedisClient, dispatchSignal chan bool) {
+func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit chan bool, dispatchSignal chan bool) {
 	var wg sync.WaitGroup
 	taskCh := make(chan Task)
 
@@ -130,7 +132,7 @@ func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		slog.Debug("Starting worker", i)
-		go worker(taskCh, results, quit, tasks, &wg, redisClient, dispatchSignal)
+		go worker(taskCh, results, quit, tasks, &wg, dispatchSignal)
 	}
 
 	wg.Wait() // 等待所有工作协程完成
@@ -145,27 +147,17 @@ func shouldRetry(task Task) bool {
 	}
 	return false
 }
-func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueue *TaskQueue, wg *sync.WaitGroup, redisClient *util.RedisClient, dispatchSignal chan bool) {
-	defer wg.Done()                        // 在工作协程结束时调用
-	timeout := time.After(5 * time.Second) // 设置超时时间，例如5秒
+func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueue *TaskQueue, wg *sync.WaitGroup, dispatchSignal chan bool) {
+	defer wg.Done() // 在工作协程结束时调用
 	for {
 
 		select {
-		case task, ok := <-tasks:
-			if !ok {
-				// tasks 被关闭，退出循环
-				return
-			}
-			slog.Debug("Processing task: %+v", task)
 		case <-quit:
 			slog.Debug("Worker stopped.")
 			return
-		case <-timeout:
-			slog.Debug("Worker timeout.")
-			return
 		case task := <-tasks:
 			slog.Debug("Processing task: %+v", task)
-			result := processTask(task, redisClient)
+			result := processTask(task)
 			if result.Error != nil && shouldRetry(task) {
 				task.RetryCount++                                        // 增加重试次数
 				time.Sleep(time.Second * time.Duration(task.RetryCount)) // 增加延迟
@@ -173,22 +165,22 @@ func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueu
 				taskQueue.PushTask(&task, dispatchSignal)
 			} else {
 				slog.Debug("Sending result to results channel: %+v", result)
-				results <- result
+				task.ResultChan <- result
 			}
 		}
 	}
 }
 
-func processTask(task Task, redisClient *util.RedisClient) Result {
+func processTask(task Task) Result {
 	var err error
 	statusCode := SuccessCode
 	statusMsg := SuccessMessage
 
 	switch task.Action {
 	case 1:
-		err = redisClient.LikeVideo(task.UserID, task.VideoID)
+		err = util.GlobalRedisClient.LikeVideo(task.UserID, task.VideoID)
 	case 2:
-		err = redisClient.UnlikeVideo(task.UserID, task.VideoID)
+		err = util.GlobalRedisClient.UnlikeVideo(task.UserID, task.VideoID)
 	default:
 		err = fmt.Errorf("invalid action_type: %v", task.Action)
 		statusCode = ErrorCode
@@ -203,14 +195,14 @@ func processTask(task Task, redisClient *util.RedisClient) Result {
 	}
 }
 
-func SyncLikesToDatabase(redisClient *util.RedisClient) error {
+func SyncLikesToDatabase() error {
 	videoIDs, err := getAllVideoIDs() // 获取所有视频ID
 	if err != nil {
 		return err
 	}
 
 	for _, videoID := range videoIDs {
-		likes, err := redisClient.GetLikes(videoID)
+		likes, err := util.GlobalRedisClient.GetLikes(videoID)
 		if err != nil {
 			return err
 		}
@@ -283,60 +275,82 @@ func getAllVideoIDs() ([]uint, error) {
 	return videoIDs, nil
 }
 
-func StartSyncTask(redisClient *util.RedisClient, db *gorm.DB, syncInterval time.Duration) {
+func StartSyncTask(db *gorm.DB, syncInterval time.Duration) {
 	ticker := time.NewTicker(syncInterval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			if err := SyncLikesToDatabase(redisClient); err != nil {
+			if err := SyncLikesToDatabase(); err != nil {
 				log.Printf("Failed to sync likes to database: %v", err)
 			}
 		}
 	}
 }
 
-func (s *FavoriteServiceImpl) FavoriteAction(userId uint, videoID int64, actionType int32) (FavoriteActionResponse, error) {
-	slog.Debug("Starting FavoriteAction for videoID:", videoID, "actionType:", actionType)
-	dispatchSignal := make(chan bool, 10)
-	taskQueue := NewTaskQueue()
-	slog.Debug("TaskQueue created:", taskQueue) // 添加此行来查看任务队列的详细信息
+var (
+	taskQueue      *TaskQueue
+	dispatchSignal chan bool
+	results        chan Result
+	quit           chan bool
+)
+
+func (s *FavoriteServiceImpl) StartFavoriteAction() {
+	// 创建全局变量
+	taskQueue = NewTaskQueue()
+	dispatchSignal = make(chan bool, 10)
+	results = make(chan Result, 10)
+	quit = make(chan bool)
+
 	// 初始化堆
 	heap.Init(taskQueue)
+
+	// 启动工人 Usmups.
+	go startWorkers(10, taskQueue, results, quit, dispatchSignal)
+
+}
+func (s *FavoriteServiceImpl) FavoriteAction(userId int64, videoID int64, actionType int32) (FavoriteActionResponse, error) {
+	slog.Debug("Starting FavoriteAction for videoID:", videoID, "actionType:", actionType)
+	//dispatchSignal := make(chan bool, 10)
+	//taskQueue := NewTaskQueue()
+	//slog.Debug("TaskQueue created:", taskQueue) // 添加此行来查看任务队列的详细信息
+	//// 初始化堆
+	//heap.Init(taskQueue)
+	//results := make(chan Result, 10)
+
 	task := &Task{
-		UserID:  userId,
-		VideoID: uint(videoID),
-		Action:  actionType,
+		UserID:     uint(userId),
+		VideoID:    uint(videoID),
+		Action:     actionType,
+		ResultChan: results, // 将结果通道添加到任务中
 	}
 	slog.Debug("Task created:", task) // 添加此行来查看任务的详细信息
 	taskQueue.PushTask(task, dispatchSignal)
 	slog.Debug("Task pushed to queue")
 
-	results := make(chan Result, 10)
-	quit := make(chan bool)
+	//quit := make(chan bool)
 
 	// 启动工人
-	startWorkers(5, taskQueue, results, quit, s.RedisClient, dispatchSignal)
-
-	slog.Debug("Workers started")
-
-	slog.Debug("Task pushed to the queue:", task)
+	//go startWorkers(5, taskQueue, results, quit, s.util.GlobalRedisClient, dispatchSignal)
+	//
+	//slog.Debug("Workers started")
+	//
+	//slog.Debug("Task pushed to the queue:", task)
 
 	// 等待结果
 	slog.Debug("Waiting for results")
 	result := <-results
 
-	slog.Debug("Results received:", result)
+	slog.Debug("Results received:")
 
 	// 关闭任务通道
-	if taskQueue.Len() == 0 {
-		close(quit)
-		close(dispatchSignal)
-
-	}
+	//if taskQueue.Len() == 0 {
+	//	close(quit)
+	//	close(dispatchSignal)
+	//}
 	slog.Debug("FavoriteAction completed for videoID:", videoID)
-
+	slog.Infof("Number of goroutines: %d\n", runtime.NumGoroutine())
 	return FavoriteActionResponse{
 		StatusCode: int32(result.StatusCode),
 		StatusMsg:  result.StatusMsg,

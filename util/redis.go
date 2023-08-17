@@ -13,6 +13,17 @@ type RedisClient struct {
 	ctx    context.Context
 }
 
+var GlobalRedisClient *RedisClient
+
+func init() {
+	// 你的 Redis 配置
+	addr := "43.140.203.85:6379"
+	password := ""
+	db := 0
+
+	// 初始化全局 RedisClient
+	GlobalRedisClient = NewRedisClient(addr, password, db)
+}
 func NewRedisClient(addr string, password string, db int) *RedisClient {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
