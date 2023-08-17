@@ -2,9 +2,10 @@
 package migrate
 
 import (
-	config2 "github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/database"
-	"github.com/RaymondCode/simple-demo/utils/gen"
+	config2 "bytedancedemo/config"
+	"bytedancedemo/database"
+	"bytedancedemo/utils/gen"
+
 	"github.com/gookit/slog"
 	"github.com/spf13/cobra"
 )

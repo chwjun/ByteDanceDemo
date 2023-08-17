@@ -2,14 +2,14 @@
 package api
 
 import (
-	config2 "github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/database"
-	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
-	"github.com/RaymondCode/simple-demo/middleware/redis"
-	"github.com/RaymondCode/simple-demo/router"
+	config2 "bytedancedemo/config"
+	"bytedancedemo/dao"
+	"bytedancedemo/database"
+	"bytedancedemo/middleware/rabbitmq"
+	"bytedancedemo/middleware/redis"
+	"bytedancedemo/router"
 
-	//"github.com/RaymondCode/simple-demo/service"
+	//"bytedancedemo/service"
 	"github.com/spf13/cobra"
 )
 

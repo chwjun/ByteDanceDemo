@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/RaymondCode/simple-demo/middleware/redis"
+	"bytedancedemo/middleware/redis"
 )
 
 func TestFollowServiceImp_GetFollowings(t *testing.T) {

@@ -2,7 +2,8 @@
 package gen
 
 import (
-	"github.com/RaymondCode/simple-demo/database"
+	"bytedancedemo/database"
+
 	"gorm.io/gen"
 )
 
