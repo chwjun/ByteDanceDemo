@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/repository"
+	"bytedancedemo/config"
+	"bytedancedemo/repository"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 

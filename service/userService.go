@@ -1,7 +1,7 @@
 // Package service @Author: youngalone [2023/8/8]
 package service
 
-import "github.com/RaymondCode/simple-demo/model"
+import "bytedancedemo/model"
 
 type User struct {
 	Id              int64  `json:"id"`               // 主键

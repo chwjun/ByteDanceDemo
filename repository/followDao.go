@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/model"
+	"bytedancedemo/dao"
+	"bytedancedemo/model"
 )
 
 type Follow struct {
@@ -153,14 +153,7 @@ func (*FollowDao) GetFollowingsInfo(userId int64) ([]int64, int64, error) {
 	}
 
 	// 查询正在关注的用户总数
-	var totalFollowings int64
-	totalFollowings, err = f.
-		Where(f.UserID.Eq(userId), f.Followed.Eq(1)).
-		Count()
-	if err != nil {
-		log.Println(err)
-		return nil, 0, err
-	}
+	totalFollowings := int64(len(followingIds))
 
 	return followingIds, totalFollowings, nil
 
@@ -182,14 +175,7 @@ func (*FollowDao) GetFollowersInfo(userId int64) ([]int64, int64, error) {
 	}
 
 	// 查询粉丝总数
-	var totalFollowers int64
-	totalFollowers, err = f.
-		Where(f.FollowingID.Eq(userId), f.Followed.Eq(1)).
-		Count()
-	if err != nil {
-		log.Println(err)
-		return nil, 0, err
-	}
+	totalFollowers := int64(len(followerIds))
 
 	return followerIds, totalFollowers, nil
 }

@@ -2,9 +2,10 @@ package redis
 
 import (
 	"context"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 var Ctx = context.Background()
@@ -36,8 +37,8 @@ var RdbUVid *redis.Client
 var RdbVUid *redis.Client
 
 const (
-	ProdRedisAddr = "ip:port"
-	ProRedisPwd   = "redis-passwd"
+	ProdRedisAddr = "43.140.203.85:6379"
+	ProRedisPwd   = ""
 )
 
 // InitRedis 初始化 Redis 连接，redis 默认 16 个 DB
@@ -87,6 +88,12 @@ func InitRedis() {
 		Password: ProRedisPwd,
 		DB:       13,
 	})
+	_, err := RdbTest.Ping(Ctx).Result()
+	if err != nil {
+		log.Panicf("连接 redis 错误，错误信息: %v", err)
+	} else {
+		log.Println("Redis 连接成功！")
+	}
 }
 
 // 测试连接 Redis

@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/RaymondCode/simple-demo/controller"
-	"github.com/RaymondCode/simple-demo/middleware"
-	"github.com/gin-gonic/gin"
+	"bytedancedemo/controller"
+	"bytedancedemo/middleware"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Setup() {

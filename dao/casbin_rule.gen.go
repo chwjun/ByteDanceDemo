@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/RaymondCode/simple-demo/model"
+	"bytedancedemo/model"
 )
 
 func newCasbinRule(db *gorm.DB, opts ...gen.DOOption) casbinRule {

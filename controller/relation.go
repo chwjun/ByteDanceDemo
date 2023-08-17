@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RaymondCode/simple-demo/service"
+	"bytedancedemo/service"
+
 	"github.com/gin-gonic/gin"
 )
 

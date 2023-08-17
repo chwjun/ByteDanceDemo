@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
-	"github.com/RaymondCode/simple-demo/middleware/redis"
-	"github.com/RaymondCode/simple-demo/repository"
+	"bytedancedemo/config"
+	"bytedancedemo/middleware/rabbitmq"
+	"bytedancedemo/middleware/redis"
+	"bytedancedemo/repository"
 )
 
 // FollowServiceImp 该结构体继承FollowService接口。
