@@ -4,7 +4,6 @@ import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -42,7 +41,6 @@ func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int) ([
 		return nil, time.Time{}, err
 	}
 
-	// 遍历video_list
 	response_video_list, err = makeResponseVideo(dao_video_list, videoService, int64(user_id))
 	if err != nil {
 		return nil, dao_video_list[len(dao_video_list)-1].CreatedAt, err
@@ -50,6 +48,7 @@ func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int) ([
 	return response_video_list, dao_video_list[len(dao_video_list)-1].CreatedAt, nil
 }
 
+// 构造返回的视频流
 func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoServiceImp, user_id int64) ([]ResponseVideo, error) {
 	response_video_list := make([]ResponseVideo, 0, size)
 	for _, video := range dao_video_list {
@@ -115,8 +114,9 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 	return response_video_list, nil
 }
 
+// 提供给外部的接口
 func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
-	dao_video_list, err := GetVideoListByAuthorID(authorId)
+	dao_video_list, err := DAOGetVideoListByAuthorID(authorId)
 	if err != nil {
 		return nil, err
 	} else {
@@ -125,7 +125,7 @@ func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*
 }
 
 func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (int, error) {
-	dao_video_list, err := GetVideoListByAuthorID(authorId)
+	dao_video_list, err := DAOGetVideoListByAuthorID(authorId)
 	if err != nil {
 		return 0, err
 	} else {
@@ -133,17 +133,13 @@ func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (in
 	}
 }
 
-func (videoService *VideoServiceImp) PublishList(user_id string) ([]ResponseVideo, error) {
+func (videoService *VideoServiceImp) PublishList(user_id int) ([]ResponseVideo, error) {
 	response_video_list := make([]ResponseVideo, 0, size)
-	userid, err := strconv.ParseInt(user_id, 10, 64)
+	dao_video_list, err := videoService.GetVideoListByAuthorID(int64(user_id))
 	if err != nil {
 		return nil, err
 	}
-	dao_video_list, err := videoService.GetVideoListByAuthorID(userid)
-	if err != nil {
-		return nil, err
-	}
-	response_video_list, err = makeResponseVideo(dao_video_list, videoService, userid)
+	response_video_list, err = makeResponseVideo(dao_video_list, videoService, int64(user_id))
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +161,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	return result, err
 }
 
-func GetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
+func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
 	V := dao.Video
 	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
 	if err != nil {
