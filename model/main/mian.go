@@ -74,16 +74,16 @@ func insertFakeData(db *gorm.DB) {
 	db.Create(&model.Video{AuthorID: 2, Title: "Video 2", PlayURL: "url2", CoverURL: "cover2"})
 
 	// Insert Comment fake data
-	db.Create(&model.Comment{UserID: 1, VideoID: 1, Content: "Great video!", ActionType: 1})
-	db.Create(&model.Comment{UserID: 2, VideoID: 2, Content: "Nice work!", ActionType: 1})
+	db.Create(&model.Comment{UserID: 1, VideoID: 1, Content: "Great video!", ActionType: "1"})
+	db.Create(&model.Comment{UserID: 2, VideoID: 2, Content: "Nice work!", ActionType: "1"})
 
 	// Insert Like fake data
 	db.Create(&model.Like{UserID: 1, VideoID: 1, Liked: 1})
 	db.Create(&model.Like{UserID: 2, VideoID: 2, Liked: 1})
 
 	// Insert Message fake data
-	db.Create(&model.Message{SenderID: 1, ReceiverID: 2, Content: "Hello!", ActionType: 1})
-	db.Create(&model.Message{SenderID: 2, ReceiverID: 1, Content: "Hi!", ActionType: 1})
+	db.Create(&model.Message{SenderID: 1, ReceiverID: 2, Content: "Hello!", ActionType: "1"})
+	db.Create(&model.Message{SenderID: 2, ReceiverID: 1, Content: "Hi!", ActionType: "1"})
 
 	// Insert Relation fake data
 	db.Create(&model.Relation{UserID: 1, FollowingID: 2, Followed: 1})

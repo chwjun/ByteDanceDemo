@@ -3,6 +3,7 @@ package gen
 
 import (
 	"bytedancedemo/database"
+
 	"gorm.io/gen"
 )
 
