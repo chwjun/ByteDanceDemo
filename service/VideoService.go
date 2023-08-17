@@ -19,7 +19,7 @@ type ResponseVideo struct {
 
 type VideoService interface {
 	// 这里的Video是Feed接口返回的视频列表，不是数据库中的视频列表
-	Feed(latest_time time.Time) ([]ResponseVideo, time.Time, error)
+	Feed(latest_time time.Time, user_id int) ([]ResponseVideo, time.Time, error)
 	// 这里data的数据类型不太懂
 	//Action(data file, title string) (int64, string, error)
 	// 这里的Video是list接口返回的视频列表，不是数据库中的视频列表

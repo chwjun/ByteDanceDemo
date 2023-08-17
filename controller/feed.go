@@ -12,13 +12,12 @@ import (
 
 type FeedResponse struct {
 	Response
-	VideoList []Video `json:"video_list,omitempty"`
-	NextTime  int64   `json:"next_time,omitempty"`
+	VideoList []service.ResponseVideo `json:"video_list,omitempty"`
+	NextTime  int64                   `json:"next_time,omitempty"`
 }
 
 // 参数latest_time 和 token
 func Feed(c *gin.Context) {
-	var video_test = make([]Video, 10)
 	default_time := time.Now().UnixMilli()
 	var latest_time_str = c.DefaultQuery("latest_time", strconv.FormatInt(default_time, 10))
 	temp, err := strconv.ParseInt(latest_time_str, 10, 64)
@@ -27,15 +26,18 @@ func Feed(c *gin.Context) {
 		panic(1)
 	}
 	latest_time := time.UnixMilli(temp)
+	videoservice := service.NewVSIInstance()
 	// 调用Service的Feed进行处理
-	_, _, err = service.Feed(latest_time)
+	user_id, _ := c.Get("userID")
+	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
+	last_time1 := last_time.UnixMilli()
 	if err != nil {
 
 	}
 
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
-		VideoList: video_test,
-		NextTime:  time.Now().Unix(),
+		VideoList: video_list,
+		NextTime:  last_time1,
 	})
 }
