@@ -1,7 +1,7 @@
 package service
 
 import (
-	"bytedancedemo/database"
+	"bytedancedemo/dao"
 	"bytedancedemo/model"
 	"fmt"
 	"strconv"
@@ -36,7 +36,7 @@ func NewVSIInstance() *VideoServiceImp {
 func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int) ([]ResponseVideo, time.Time, error) {
 	response_video_list := make([]ResponseVideo, 0, size)
 	// 根据最新时间查找数据库获取视频的信息
-	dao_video_list, err := database.GetVideosByLatestTime(latest_time)
+	dao_video_list, err := GetVideosByLatestTime(latest_time)
 	if err != nil {
 		fmt.Println(err)
 		return nil, time.Time{}, err
@@ -116,7 +116,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 }
 
 func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
-	dao_video_list, err := database.GetVideoListByAuthorID(authorId)
+	dao_video_list, err := GetVideoListByAuthorID(authorId)
 	if err != nil {
 		return nil, err
 	} else {
@@ -125,7 +125,7 @@ func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*
 }
 
 func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (int, error) {
-	dao_video_list, err := database.GetVideoListByAuthorID(authorId)
+	dao_video_list, err := GetVideoListByAuthorID(authorId)
 	if err != nil {
 		return 0, err
 	} else {
@@ -149,4 +149,27 @@ func (videoService *VideoServiceImp) PublishList(user_id string) ([]ResponseVide
 	}
 	return response_video_list, err
 
+}
+
+const Video_list_size = 10
+
+func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
+	// 在这里查询
+	V := dao.Video
+	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
+	//result := DB.Where("CreatedAt < ?", latest_time).Order("CreatedAt desc").Limit(Video_list_size).Find(&videos_list)
+	if err != nil {
+		result = nil
+		return nil, err
+	}
+	return result, err
+}
+
+func GetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
+	V := dao.Video
+	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, err
 }

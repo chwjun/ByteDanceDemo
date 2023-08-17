@@ -28,7 +28,7 @@ func Feed(c *gin.Context) {
 	latest_time := time.UnixMilli(temp)
 	videoservice := service.NewVSIInstance()
 	// 调用Service的Feed进行处理
-	user_id, _ := c.Get("userID")
+	user_id := c.GetInt("userID")
 	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {
