@@ -1,0 +1,26 @@
+
+=== RUN   TestFavoriteActionIntegration
+2023/08/17 18:21:06 Successfully connected to Redis at 43.140.203.85:6379
+[2023/08/17T18:21:06.656] [application] [DEBUG] [favorite_action.go:287,FavoriteAction] Starting FavoriteAction for videoID: 3 actionType: 1
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:42,NewTaskQueue] NewTaskQueue
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:290,FavoriteAction] TaskQueue created: &{[] {0 0}}
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:52,Len] TaskQueue length: 0
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:298,FavoriteAction] Task created: &{2 3 1 0}
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:52,Len] TaskQueue length: 1
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:69,PushTask] Pushed task to queue: %+v &{2 3 1 0}
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:70,PushTask] TaskQueue length after push: 1
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:72,PushTask] Dispatch signal sent
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:300,FavoriteAction] Task pushed to queue
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:105,startWorkers] Starting task dispatcher
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:125,startWorkers] Starting workers
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:129,startWorkers] Starting worker 0
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:129,startWorkers] Starting worker 1
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:111,func1] Received dispatch signal
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:52,Len] TaskQueue length: 1
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:52,Len] TaskQueue length: 1
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:129,startWorkers] Starting worker 2
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:77,PopTask] Popped task from queue: %+v &{2 3 1 0}
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:114,func1] Dispatching task: &{2 3 1 0}
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:129,startWorkers] Starting worker 3
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:154,worker] Processing task: %+v {2 3 1 0}
+[2023/08/17T18:21:06.657] [application] [DEBUG] [favorite_action.go:129,startWorkers] Starting worker 4

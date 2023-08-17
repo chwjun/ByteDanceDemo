@@ -65,50 +65,39 @@ func (q *TaskQueue) Swap(i, j int) {
 	q.tasks[i], q.tasks[j] = q.tasks[j], q.tasks[i]
 }
 func (q *TaskQueue) PushTask(task *Task, dispatchSignal chan bool) {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	q.tasks = append(q.tasks, task) // 直接将任务添加到队列
-	heap.Fix(q, len(q.tasks)-1)     // 重新调整堆
+	heap.Push(q, task) // 使用标准的堆操作
 	slog.Debug("Pushed task to queue: %+v", task)
-	dispatchSignal <- true // 发送信号
+	slog.Debug("TaskQueue length after push:", len(q.tasks)) // 添加此行
+	dispatchSignal <- true                                   // 发送信号
 	slog.Debug("Dispatch signal sent")
 }
 
 func (q *TaskQueue) PopTask() *Task {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	task := heap.Pop(q).(*Task)
+	task := heap.Pop(q).(*Task) // 使用标准的堆操作
 	slog.Debug("Popped task from queue: %+v", task)
 	return task
 }
 
 func (q *TaskQueue) Push(x interface{}) {
-	slog.Debug("Push: acquiring lock")
 	q.mutex.Lock()
-	defer func() {
-		q.mutex.Unlock()
-		slog.Debug("Push: releasing lock")
-	}()
+	defer q.mutex.Unlock()
 	item, ok := x.(*Task)
 	if !ok {
 		slog.Fatal("Push: Expected *Task, got something else")
 		return
 	}
 	q.tasks = append(q.tasks, item)
-	slog.Debug("Push: task appended")
 }
 
 func (q *TaskQueue) Pop() interface{} {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	old := q.tasks
-	n := len(old)
-	item := old[n-1]
-	q.tasks = old[0 : n-1]
+	n := len(q.tasks)
+	item := q.tasks[n-1]
+	q.tasks = q.tasks[0 : n-1]
 	return item
 }
 
-// 实现heap.Interface
 func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit chan bool, redisClient *util.RedisClient, dispatchSignal chan bool) {
 	var wg sync.WaitGroup
 	taskCh := make(chan Task)
@@ -118,22 +107,30 @@ func startWorkers(workerCount int, tasks *TaskQueue, results chan<- Result, quit
 	go func() {
 		for {
 			select {
-			case <-dispatchSignal:
+			case _, ok := <-dispatchSignal:
+				if !ok {
+					// dispatchSignal 被关闭，退出循环
+					return
+				}
+				slog.Debug("Received dispatch signal")
 				if tasks.Len() > 0 {
 					task := tasks.PopTask()
 					slog.Debug("Dispatching task:", task)
 					taskCh <- *task
+				} else {
+					slog.Debug("No tasks in queue")
 				}
+			default:
+				time.Sleep(time.Millisecond * 100) // sleep for a while before next check
 			}
 		}
 	}()
-
 	slog.Debug("Starting workers")
 
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		slog.Debug("Starting worker", i)
-		go worker(taskCh, results, quit, tasks, &wg, redisClient)
+		go worker(taskCh, results, quit, tasks, &wg, redisClient, dispatchSignal)
 	}
 
 	wg.Wait() // 等待所有工作协程完成
@@ -148,13 +145,23 @@ func shouldRetry(task Task) bool {
 	}
 	return false
 }
-func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueue *TaskQueue, wg *sync.WaitGroup, redisClient *util.RedisClient) {
-	defer wg.Done() // 在工作协程结束时调用
+func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueue *TaskQueue, wg *sync.WaitGroup, redisClient *util.RedisClient, dispatchSignal chan bool) {
+	defer wg.Done()                        // 在工作协程结束时调用
+	timeout := time.After(5 * time.Second) // 设置超时时间，例如5秒
 	for {
 
 		select {
+		case task, ok := <-tasks:
+			if !ok {
+				// tasks 被关闭，退出循环
+				return
+			}
+			slog.Debug("Processing task: %+v", task)
 		case <-quit:
 			slog.Debug("Worker stopped.")
+			return
+		case <-timeout:
+			slog.Debug("Worker timeout.")
 			return
 		case task := <-tasks:
 			slog.Debug("Processing task: %+v", task)
@@ -163,8 +170,9 @@ func worker(tasks <-chan Task, results chan<- Result, quit <-chan bool, taskQueu
 				task.RetryCount++                                        // 增加重试次数
 				time.Sleep(time.Second * time.Duration(task.RetryCount)) // 增加延迟
 				// 重新将任务推入堆中
-				taskQueue.PushTask(&task, make(chan bool))
+				taskQueue.PushTask(&task, dispatchSignal)
 			} else {
+				slog.Debug("Sending result to results channel: %+v", result)
 				results <- result
 			}
 		}
@@ -291,19 +299,19 @@ func StartSyncTask(redisClient *util.RedisClient, db *gorm.DB, syncInterval time
 
 func (s *FavoriteServiceImpl) FavoriteAction(userId uint, videoID int64, actionType int32) (FavoriteActionResponse, error) {
 	slog.Debug("Starting FavoriteAction for videoID:", videoID, "actionType:", actionType)
-	dispatchSignal := make(chan bool)
+	dispatchSignal := make(chan bool, 10)
 	taskQueue := NewTaskQueue()
-
+	slog.Debug("TaskQueue created:", taskQueue) // 添加此行来查看任务队列的详细信息
+	// 初始化堆
+	heap.Init(taskQueue)
 	task := &Task{
 		UserID:  userId,
 		VideoID: uint(videoID),
 		Action:  actionType,
 	}
+	slog.Debug("Task created:", task) // 添加此行来查看任务的详细信息
 	taskQueue.PushTask(task, dispatchSignal)
-
-	heap.Init(taskQueue)
-
-	slog.Debug("TaskQueue initialized")
+	slog.Debug("Task pushed to queue")
 
 	results := make(chan Result, 10)
 	quit := make(chan bool)
@@ -322,7 +330,11 @@ func (s *FavoriteServiceImpl) FavoriteAction(userId uint, videoID int64, actionT
 	slog.Debug("Results received:", result)
 
 	// 关闭任务通道
-	close(quit)
+	if taskQueue.Len() == 0 {
+		close(quit)
+		close(dispatchSignal)
+
+	}
 	slog.Debug("FavoriteAction completed for videoID:", videoID)
 
 	return FavoriteActionResponse{
