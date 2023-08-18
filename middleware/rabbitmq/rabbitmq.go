@@ -1,12 +1,13 @@
 package rabbitmq
 
 import (
+	"bytedancedemo/config"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-const MQURL = "amqp://guest:guest@43.140.203.85:5672/"
+const MQURL = config.MQ_URL
 
 var BaseRmq *RabbitMQ
 

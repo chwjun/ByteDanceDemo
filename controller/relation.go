@@ -169,7 +169,7 @@ func FriendList(c *gin.Context) {
 	}
 
 	fsi := service.NewFSIInstance()
-	followers, err1 := fsi.GetFriends(userId)
+	friends, err1 := fsi.GetFriends(userId)
 	if err1 != nil {
 		fmt.Printf("fail")
 		c.JSON(http.StatusOK, FriendUserListResponse{
@@ -187,6 +187,6 @@ func FriendList(c *gin.Context) {
 			StatusCode: 0,
 			StatusMsg:  "获取好友列表成功",
 		},
-		followers,
+		friends,
 	})
 }
