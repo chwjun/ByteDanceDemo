@@ -29,10 +29,13 @@ func Feed(c *gin.Context) {
 	videoservice := service.NewVSIInstance()
 	// 调用Service的Feed进行处理
 	user_id := c.GetInt("userID")
+	fmt.Println(latest_time)
+	fmt.Println(user_id)
+	fmt.Println(videoservice)
 	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {
-
+		fmt.Println("error happend")
 	}
 
 	c.JSON(http.StatusOK, FeedResponse{
