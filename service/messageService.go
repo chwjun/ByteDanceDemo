@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/RaymondCode/simple-demo/controller"
+	"github.com/RaymondCode/simple-demo/model"
 	"time"
 )
 
@@ -10,8 +10,8 @@ type MessageService interface {
 	SendMessage(userId int64, toUserId int64, content string, actionType int64) error
 
 	//Get chat history function
-	GetChatHistory(userId int64, toUserId int64, searchTime time.Time) ([]controller.Message, error)
+	GetChatHistory(userId int64, toUserId int64, lastTime time.Time) ([]*model.Message, error)
 
 	//user part
-	GetLatestMessage(userId int64, selectedUserId int64) (controller.Message, error)
+	GetLatestMessage(userId int64, selectedUserId int64) (*model.Message, error)
 }
