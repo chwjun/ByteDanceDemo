@@ -135,3 +135,54 @@ func TestUserServiceImpl_InsertUser(t *testing.T) {
 		})
 	}
 }
+
+// 基准测试 获取单例
+func BenchmarkGetUserServiceInstance(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		GetUserServiceInstance()
+	}
+}
+
+// 基准测试 查询账户用户名密码
+func BenchmarkUserServiceImpl_GetUserBasicByPassword(b *testing.B) {
+	config.Init("../config/settings.yml")
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+
+	usi := GetUserServiceInstance()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		usi.GetUserBasicByPassword("admin", "123456")
+	}
+}
+
+// 基准测试 查询用户详情
+func BenchmarkUserServiceImpl_GetUserDetailsById(b *testing.B) {
+	config.Init("../config/settings.yml")
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+
+	usi := GetUserServiceInstance()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		usi.GetUserDetailsById(1, nil)
+	}
+}
+
+// 基准测试
+func BenchmarkUserServiceImpl_InsertUser(b *testing.B) {
+	config.Init("../config/settings.yml")
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+
+	usi := GetUserServiceInstance()
+	rand.New(rand.NewSource(time.Now().Unix()))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		usi.InsertUser(&model.User{
+			Name:     fmt.Sprintf("用户%d", rand.Intn(9_999_999)),
+			Password: "123456",
+			Role:     "common_user",
+		})
+	}
+}
