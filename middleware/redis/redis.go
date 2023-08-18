@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"bytedancedemo/config"
 	"context"
 	"log"
 	"time"
@@ -37,8 +38,8 @@ var RdbUVid *redis.Client
 var RdbVUid *redis.Client
 
 const (
-	ProdRedisAddr = "43.140.203.85:6379"
-	ProRedisPwd   = ""
+	ProdRedisAddr = config.RedisAddr
+	ProRedisPwd   = config.RedisPwd
 )
 
 // InitRedis 初始化 Redis 连接，redis 默认 16 个 DB
