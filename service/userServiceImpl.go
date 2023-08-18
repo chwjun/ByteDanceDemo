@@ -64,6 +64,12 @@ func (usi *UserServiceImpl) GetUserDetailsById(id int64, curID *int64) (*User, e
 		return nil, err
 	}
 	user.Name = resList[0].Name
+	user.Avatar = resList[0].Avatar
+	user.BackgroundImage = resList[0].BackgroundImage
+	user.Signature = resList[0].Signature
+	if curID != nil {
+		user.IsFollow = true
+	}
 	// TODO 需要关注模块 点赞模块 视频模块的配合 获取剩余数据
 	//var wg sync.WaitGroup
 	//wg.Add(5)
