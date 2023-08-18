@@ -1,7 +1,7 @@
 package controller
 
 import (
-	service "bytedancedemo/service"
+	"bytedancedemo/service"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,8 +12,8 @@ import (
 
 type FeedResponse struct {
 	Response
-	VideoList []Video `json:"video_list,omitempty"`
-	NextTime  int64   `json:"next_time,omitempty"`
+	VideoList []service.ResponseVideo `json:"video_list,omitempty"`
+	NextTime  int64                   `json:"next_time,omitempty"`
 }
 
 // 参数latest_time 和 token
@@ -26,12 +26,21 @@ func Feed(c *gin.Context) {
 		panic(1)
 	}
 	latest_time := time.UnixMilli(temp)
+	videoservice := service.NewVSIInstance()
 	// 调用Service的Feed进行处理
-	video_list, next_time, err := service.Feed(latest_time)
-	
+	user_id := c.GetInt("userID")
+	fmt.Println(latest_time)
+	fmt.Println(user_id)
+	fmt.Println(videoservice)
+	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
+	last_time1 := last_time.UnixMilli()
+	if err != nil {
+		fmt.Println("error happend")
+	}
+
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
-		VideoList: DemoVideos,
-		NextTime:  time.Now().Unix(),
+		VideoList: video_list,
+		NextTime:  last_time1,
 	})
 }

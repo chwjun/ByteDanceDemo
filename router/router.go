@@ -1,16 +1,18 @@
-package main
+package router
 
 import (
-	"github.com/RaymondCode/simple-demo/controller"
-	"github.com/RaymondCode/simple-demo/middleware"
+	"bytedancedemo/controller"
+	"bytedancedemo/middleware"
 	"github.com/gin-gonic/gin"
 	"time"
 )
 
-func initRouter(r *gin.Engine) {
+func Setup() {
+	r := gin.New()
 	r.Use(middleware.RateLimitMiddleware(time.Second, 20, 5))
 	r.Use(middleware.LoggerMiddleware)
 	r.Use(middleware.ErrorMiddleware)
+	//r.Use(middleware.JWTMiddleware)
 
 	// public directory is used to serve static resources
 	r.Static("/static", "./public")
@@ -38,4 +40,6 @@ func initRouter(r *gin.Engine) {
 	apiRouter.GET("/relation/friend/list/", controller.FriendList)
 	apiRouter.GET("/message/chat/", controller.MessageChat)
 	apiRouter.POST("/message/action/", controller.MessageAction)
+
+	r.Run()
 }
