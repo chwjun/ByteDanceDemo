@@ -5,3 +5,4 @@ service/CommentServiceImpl.go
 service/UserServiceImpl.go
 service/CommentService.go
 service/CommentService.go
+config/setting.yml

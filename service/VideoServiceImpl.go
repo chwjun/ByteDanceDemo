@@ -32,10 +32,16 @@ func NewVSIInstance() *VideoServiceImp {
 	return videoServiceImp
 }
 
+func (videoService *VideoServiceImp) Test1() {
+	fmt.Println("接口获取成功")
+}
+
 func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int) ([]ResponseVideo, time.Time, error) {
 
+	fmt.Println("进入了feed")
 	// 根据最新时间查找数据库获取视频的信息
 	dao_video_list, err := GetVideosByLatestTime(latest_time)
+	fmt.Println(dao_video_list)
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
 		fmt.Println("Feed")
 		return nil, time.Time{}, err
@@ -157,8 +163,9 @@ const Video_list_size = 10
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	// 在这里查询
 	V := dao.Video
+	fmt.Println(V)
 	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
-	//result := DB.Where("CreatedAt < ?", latest_time).Order("CreatedAt desc").Limit(Video_list_size).Find(&videos_list)
+
 	if err != nil {
 		fmt.Println("查询最新时间的videos出错了")
 		result = nil
