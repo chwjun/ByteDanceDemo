@@ -26,5 +26,5 @@ type VideoService interface {
 	PublishList(user_id string) ([]ResponseVideo, error)
 	GetVideoListByAuthorID(authorId int64) ([]*model.Video, error)
 	GetVideoCountByAuthorID(authorId int64) (int, error)
-	Test1()
+	Test()
 }

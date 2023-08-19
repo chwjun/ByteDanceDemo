@@ -25,13 +25,18 @@ func Feed(c *gin.Context) {
 		fmt.Println("%s cannot change to int64", latest_time_str)
 		panic(1)
 	}
+	// 时间只能是比现在小的
+	if temp > default_time {
+		temp = default_time
+	}
 	latest_time := time.UnixMilli(temp)
 	videoservice := service.NewVSIInstance()
 	// 调用Service的Feed进行处理
 	user_id := c.GetInt("userID")
 	fmt.Println(latest_time)
 	fmt.Println(user_id)
-	videoservice.Test1()
+	//fmt.Println(videoservice)
+	videoservice.Test()
 	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {

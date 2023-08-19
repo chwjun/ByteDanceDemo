@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytedancedemo/dao"
+	"bytedancedemo/database"
 	"bytedancedemo/model"
 	"fmt"
 	"sync"
@@ -15,7 +16,7 @@ type VideoServiceImp struct {
 }
 
 var (
-	size             = 10
+	size             = 8
 	videoServiceImp  *VideoServiceImp // 给controller用的
 	videoServiceOnce sync.Once
 )
@@ -32,8 +33,8 @@ func NewVSIInstance() *VideoServiceImp {
 	return videoServiceImp
 }
 
-func (videoService *VideoServiceImp) Test1() {
-	fmt.Println("接口获取成功")
+func (videoService *VideoServiceImp) Test() {
+	fmt.Println("获取接口成功")
 }
 
 func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int) ([]ResponseVideo, time.Time, error) {
@@ -161,9 +162,10 @@ func (videoService *VideoServiceImp) PublishList(user_id int) ([]ResponseVideo, 
 const Video_list_size = 10
 
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
+	dao.SetDefault(database.DB)
 	// 在这里查询
 	V := dao.Video
-	fmt.Println(V)
+	// fmt.Println(V)
 	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
 
 	if err != nil {
@@ -176,6 +178,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 
 func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
 	V := dao.Video
+	fmt.Println(V)
 	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
 	if err != nil || result == nil || len(result) == 0 {
 		return nil, err
