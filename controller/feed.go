@@ -31,7 +31,8 @@ func Feed(c *gin.Context) {
 	user_id := c.GetInt("userID")
 	fmt.Println(latest_time)
 	fmt.Println(user_id)
-	fmt.Println(videoservice)
+	//fmt.Println(videoservice)
+	videoservice.Test()
 	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {
