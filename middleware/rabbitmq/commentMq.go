@@ -140,9 +140,9 @@ func (r *CommentMQ) consumerCommentDel(msgs <-chan amqp.Delivery) {
 func newCommentRabbitMQ(queueName string, exchangeName string, key string) *CommentMQ {
 	commentMq := &CommentMQ{
 		RabbitMQ:  *BaseRmq,
-		QueueName: queueName,
-		Exchange:  exchangeName,
-		Key:       key,
+		QueueName: "comment_queue",
+		Exchange:  "comment_exchange",
+		Key:       "comment_key",
 	}
 	return commentMq
 }

@@ -1,0 +1,27 @@
+settings:
+  application:
+    rateLimit:
+  mysql:
+    host:
+    port:
+    schema:
+    username:
+    password:
+    logLevel:
+  jwt:
+    secretKey:
+    expirationTime:
+  oss:
+    avatar:
+    backgroundImage:
+    signature:
+  redis:
+    host:
+    port:
+    password:
+    expirationTime:
+  rabbitMQ:
+    host:
+    port:
+    username:
+    password:
