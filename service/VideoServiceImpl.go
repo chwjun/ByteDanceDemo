@@ -163,7 +163,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	dao.SetDefault(database.DB)
 	// 在这里查询
 	V := dao.Video
-	fmt.Println(V)
+	// fmt.Println(V)
 	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
 	//result := DB.Where("CreatedAt < ?", latest_time).Order("CreatedAt desc").Limit(Video_list_size).Find(&videos_list)
 	if err != nil {
