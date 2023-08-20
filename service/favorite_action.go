@@ -2,21 +2,12 @@ package service
 
 import (
 	"container/heap"
-	"errors"
 	"fmt"
-	"log"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/gookit/slog"
-
-	"github.com/RaymondCode/simple-demo/model"
-
-	"github.com/RaymondCode/simple-demo/dao"
-
-	"gorm.io/gorm"
 
 	"github.com/RaymondCode/simple-demo/util"
 )
@@ -195,100 +186,6 @@ func processTask(task Task) Result {
 	}
 }
 
-func SyncLikesToDatabase() error {
-	videoIDs, err := getAllVideoIDs() // 获取所有视频ID
-	if err != nil {
-		return err
-	}
-
-	for _, videoID := range videoIDs {
-		likes, err := util.GlobalRedisClient.GetLikes(videoID)
-		if err != nil {
-			return err
-		}
-
-		for userIDString, likedString := range likes {
-			userID, err := strconv.Atoi(userIDString)
-			if err != nil {
-				return err // 或者可以记录错误并继续
-			}
-			liked, err := strconv.Atoi(likedString)
-			if err != nil {
-				return err // 或者可以记录错误并继续
-			}
-
-			// 开始一个新的事务
-			tx := dao.DB.Begin()
-			if tx.Error != nil {
-				return tx.Error
-			}
-
-			first, err := dao.Like.Where(dao.Like.UserID.Eq(uint(userID)), dao.Like.VideoID.Eq(uint(videoID))).First()
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					// 如果记录未找到，则创建一个新的喜欢记录
-					like := model.Like{
-						UserID:  uint(userID),
-						VideoID: uint(videoID),
-						Liked:   int(uint(liked)),
-					}
-					if err := tx.Create(&like).Error; err != nil {
-						tx.Rollback() // 回滚事务
-						return err
-					}
-				} else {
-					// 如果发生其他错误，则回滚事务并返回该错误
-					tx.Rollback()
-					return err
-				}
-			} else {
-				// 如果记录存在，则更新点赞状态
-				first.Liked = int(uint(liked))
-				if err := tx.Save(&first).Error; err != nil {
-					tx.Rollback() // 回滚事务
-					return err
-				}
-			}
-
-			// 提交事务
-			if err := tx.Commit().Error; err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func getAllVideoIDs() ([]uint, error) {
-	videos := dao.Video // 假设您有一个名为dao的包，其中有一个Video的DAO对象
-
-	var videoIDs []uint
-	ids, err := videos.Select(videos.ID).Find()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, id := range ids {
-		videoIDs = append(videoIDs, id.ID) // 假设ID是Video中的一个字段
-	}
-
-	return videoIDs, nil
-}
-
-func StartSyncTask(db *gorm.DB, syncInterval time.Duration) {
-	ticker := time.NewTicker(syncInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			if err := SyncLikesToDatabase(); err != nil {
-				log.Printf("Failed to sync likes to database: %v", err)
-			}
-		}
-	}
-}
-
 var (
 	taskQueue      *TaskQueue
 	dispatchSignal chan bool
@@ -347,7 +244,7 @@ func (s *FavoriteServiceImpl) FavoriteAction(userId int64, videoID int64, action
 	// 关闭任务通道
 	//if taskQueue.Len() == 0 {
 	//	close(quit)
-	//	close(dispatchSignal)
+	//	close(dispatchSignal)我觉得就是。
 	//}
 	slog.Debug("FavoriteAction completed for videoID:", videoID)
 	slog.Infof("Number of goroutines: %d\n", runtime.NumGoroutine())
