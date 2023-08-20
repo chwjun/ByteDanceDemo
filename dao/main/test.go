@@ -2,70 +2,62 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/RaymondCode/simple-demo/dao"
 )
 
-type UserCounts struct {
-	FollowingCount int
-	FansCount      int
-}
+func GetUserTotalReceivedLikes(userIDs []uint) (map[uint]int64, error) {
+	likesCount := make(map[uint]int64)
 
-func GetUserCounts(userIDs []uint) (map[uint]*UserCounts, error) {
-	// 获取关注数
-	var followingCounts []*UserCount
-	err := dao.Relation.Select(dao.Relation.UserID, dao.Relation.ID.Count().As("count")).
-		Where(dao.Relation.UserID.In(userIDs...), dao.Relation.Followed.Eq(1), dao.Relation.DeletedAt.IsNull()).
-		Group(dao.Relation.UserID).
-		Scan(&followingCounts)
+	// 定义一个结构体来保存查询结果
+	type LikeResult struct {
+		UserID uint
+		Count  int64
+	}
+
+	var results []LikeResult
+	err := dao.Like.
+		Where(dao.Like.UserID.In(userIDs...), dao.Like.Liked.Eq(1), dao.Like.DeletedAt.IsNull()).
+		Group(dao.Like.UserID).
+		Select(dao.Like.UserID.As("user_id"), dao.Like.ID.Count().As("count")).
+		Scan(&results)
+
 	if err != nil {
-		return nil, fmt.Errorf("无法获取用户的关注数量: %v", err)
+		return nil, fmt.Errorf("无法获取用户总接收的喜欢数量: %v", err)
 	}
 
-	// 获取粉丝数
-	var fansCounts []*UserCount
-	err = dao.Relation.Select(dao.Relation.FollowingID.As("user_id"), dao.Relation.ID.Count().As("count")).
-		Where(dao.Relation.FollowingID.In(userIDs...), dao.Relation.Followed.Eq(1), dao.Relation.DeletedAt.IsNull()).
-		Group(dao.Relation.FollowingID).
-		Scan(&fansCounts)
-	if err != nil {
-		return nil, fmt.Errorf("无法获取用户的粉丝数量: %v", err)
+	for _, result := range results {
+		likesCount[result.UserID] = result.Count
 	}
 
-	// 创建一个映射以快速查找结果
-	resultsMap := make(map[uint]*UserCounts)
-	for _, count := range followingCounts {
-		resultsMap[count.UserID] = &UserCounts{FollowingCount: count.Count}
-	}
-	for _, count := range fansCounts {
-		if _, exists := resultsMap[count.UserID]; exists {
-			resultsMap[count.UserID].FansCount = count.Count
-		} else {
-			resultsMap[count.UserID] = &UserCounts{FansCount: count.Count}
+	// 对于没有获取到喜欢数量的用户，将他们添加到map中，并设置值为0
+	for _, id := range userIDs {
+		if _, ok := likesCount[id]; !ok {
+			likesCount[id] = 0
 		}
 	}
 
-	// 确保所有传入的用户ID都包含在结果中
-	for _, userID := range userIDs {
-		if _, exists := resultsMap[userID]; !exists {
-			resultsMap[userID] = &UserCounts{FollowingCount: 0, FansCount: 0}
-		}
-	}
-	return resultsMap, nil
+	return likesCount, nil
 }
 
 func main() {
-	userCounts, err := GetUserCounts()
+
+	// 这里假设你有一个用户ID的列表
+	userIDs := []uint{1, 2, 3}
+
+	// 调用 GetUserTotalReceivedLikes 函数
+	likesCount, err := GetUserTotalReceivedLikes(userIDs)
+
+	// 检查错误
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("获取用户喜欢数量失败:", err)
+		return
 	}
 
-	// 遍历映射并打印每个用户的关注者和关注数
-	for userID, userCount := range userCounts {
-		fmt.Printf("User ID: %d\n", userID)
-		fmt.Printf("Followers: %d\n", userCount.Followers)
-		fmt.Printf("Following: %d\n", userCount.Following)
-		fmt.Println("-----------------------------")
+	// 打印结果
+	fmt.Println("用户喜欢数量:")
+	for userID, count := range likesCount {
+		fmt.Printf("用户ID: %d, 喜欢数量: %d\n", userID, count)
 	}
+
 }

@@ -11,13 +11,25 @@ func BenchmarkFavoriteList(b *testing.B) {
 		// 您可以在此处设置任何所需的模拟或实际依赖项
 	}
 
-	// 设置测试数据
+	// 设置测试数据嗯，
 	userID := int64(1)
 
 	// 运行基准测试
 	b.ResetTimer() // 重置计时器以排除设置过程的时间
 	for i := 0; i < b.N; i++ {
 		_, _ = service.FavoriteList(userID)
+	}
+}
+func BenchmarkGetLikeCounts(b *testing.B) {
+
+	videoIDs := []uint{1, 2, 3} // Replace this with the actual number suited for your test.
+	b.ResetTimer()              // start the timer
+
+	for i := 0; i < b.N; i++ {
+		_, err := GetLikeCounts(videoIDs)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 func TestGetFavoriteVideoInfoByUserID(t *testing.T) {
@@ -151,5 +163,28 @@ func TestGetUserCounts(t *testing.T) {
 	fmt.Println("Fans counts for user IDs [1, 2]:")
 	for _, userID := range userIDs {
 		fmt.Printf("UserID: %v, Count: %v\n", userID, fansMap[userID])
+	}
+}
+func TestGetLikeCounts(t *testing.T) {
+	// 输入的视频ID
+	videoIDs := []uint{1, 2, 3}
+
+	// 调用函数
+	result, err := GetLikeCounts(videoIDs)
+	if err != nil {
+		t.Fatalf("GetLikeCounts failed with error: %v", err)
+	}
+
+	// 检查结果
+	if len(result) != len(videoIDs) {
+		t.Fatalf("Expected result length %d, but got %d", len(videoIDs), len(result))
+	}
+
+	for _, id := range videoIDs {
+		if count, ok := result[id]; ok {
+			fmt.Printf("Video ID %d has %d likes\n", id, count)
+		} else {
+			t.Fatalf("Expected video ID %d in result, but not found", id)
+		}
 	}
 }

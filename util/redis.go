@@ -121,7 +121,7 @@ func (r *RedisClient) GetLikes(videoID uint) (map[string]string, error) {
 	key := fmt.Sprintf("likes:%d", videoID)
 	return r.client.HGetAll(r.ctx, key).Result()
 }
-func (r *RedisClient) GetLikeCounts(videoIDs []uint) (map[uint]int64, error) {
+func (r *RedisClient) GetVideoLikeCounts(videoIDs []uint) (map[uint]int64, error) {
 	resultsMap := make(map[uint]int64)
 
 	for _, videoID := range videoIDs {
@@ -138,6 +138,23 @@ func (r *RedisClient) GetLikeCounts(videoIDs []uint) (map[uint]int64, error) {
 
 	return resultsMap, nil
 }
+func (r *RedisClient) GetTotalLikeCounts(videoIDs []uint) (int64, error) {
+	// 初始化总点赞数为 0
+	totalLikeCount := int64(0)
+
+	// 遍历每个视频ID，并获取其点赞数
+	for _, videoID := range videoIDs {
+		likeKey := fmt.Sprintf("likes:%d", videoID)
+		likeCount, err := r.client.HGet(r.ctx, likeKey, "totalLikes").Int64()
+		if err != nil && err != redis.Nil { // 如果错误不是由于键不存在造成的，则返回错误
+			return 0, fmt.Errorf("无法获取视频的喜欢（like）数量: %v", err)
+		}
+		totalLikeCount += likeCount // 将找到的点赞数加到总数上
+	}
+
+	return totalLikeCount, nil
+}
+
 func SyncLikesToDatabase() error {
 	videoIDs, err := getAllVideoIDs() // 获取所有视频ID
 	if err != nil {
