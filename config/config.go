@@ -9,7 +9,7 @@ import (
 )
 
 func Init(configFilePath string) {
-	//configFilePath = "./settings.yml"
+	// configFilePath = "./settings.yml"
 	viper.SetConfigFile(configFilePath)
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("出问题了")

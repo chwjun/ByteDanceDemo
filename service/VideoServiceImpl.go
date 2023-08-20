@@ -146,12 +146,12 @@ func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (in
 }
 
 func (videoService *VideoServiceImp) PublishList(user_id int) ([]ResponseVideo, error) {
-	response_video_list := make([]ResponseVideo, 0, size)
+
 	dao_video_list, err := videoService.GetVideoListByAuthorID(int64(user_id))
 	if err != nil {
 		return nil, err
 	}
-	response_video_list, err = makeResponseVideo(dao_video_list, videoService, int64(user_id))
+	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,8 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	V := dao.Video
 	// fmt.Println(V)
 	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
-
+	fmt.Println(latest_time)
+	fmt.Println(len(result))
 	if err != nil {
 		fmt.Println("查询最新时间的videos出错了")
 		result = nil
