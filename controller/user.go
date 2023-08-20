@@ -3,6 +3,7 @@ package controller
 import (
 	"bytedancedemo/model"
 	"bytedancedemo/service"
+	"bytedancedemo/utils/encryption"
 	"bytedancedemo/utils/token"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -38,14 +39,15 @@ type UserResponse struct {
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
+	passwordKey := encryption.Encrypt(password)
 
 	usi := service.GetUserServiceInstance()
-	if _, isExist := usi.GetUserBasicByPassword(username, password); isExist {
+	if _, isExist := usi.GetUserBasicByPassword(username, passwordKey); isExist {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "用户已存在"},
 		})
 	} else {
-		user, ok := usi.InsertUser(&model.User{Name: username, Password: password, Role: "common_user"})
+		user, ok := usi.InsertUser(&model.User{Name: username, Password: passwordKey, Role: "common_user"})
 		if !ok {
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "注册失败"},
@@ -80,9 +82,10 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
+	passwordKey := encryption.Encrypt(password)
 
 	usi := service.GetUserServiceInstance()
-	user, isExist := usi.GetUserBasicByPassword(username, password)
+	user, isExist := usi.GetUserBasicByPassword(username, passwordKey)
 	if !isExist {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{
