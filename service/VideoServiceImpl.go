@@ -37,17 +37,17 @@ func (videoService *VideoServiceImp) Test() {
 	fmt.Println("获取接口成功")
 }
 
-func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int) ([]ResponseVideo, time.Time, error) {
+func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) ([]ResponseVideo, time.Time, error) {
 
-	fmt.Println("进入了feed")
+	// fmt.Println("进入了feed")
 	// 根据最新时间查找数据库获取视频的信息
 	dao_video_list, err := GetVideosByLatestTime(latest_time)
-	fmt.Println(dao_video_list)
+	fmt.Println(len(dao_video_list))
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
 		fmt.Println("Feed")
 		return nil, time.Time{}, err
 	}
-	fmt.Println("here is Feed")
+	// fmt.Println("here is Feed")
 	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
 	if err != nil {
 		return nil, dao_video_list[len(dao_video_list)-1].CreatedAt, err
@@ -86,7 +86,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			// 	return
 			// }
 			comment_count := 10
-			temp_response_video.Comment_count = int(comment_count)
+			temp_response_video.Comment_count = int64(comment_count)
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据视频id找点赞总数
@@ -98,12 +98,12 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			// 	return
 			// }
 			like_count := 100
-			temp_response_video.Favorite_count = int(like_count)
+			temp_response_video.Favorite_count = int64(like_count)
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据当前用户id和视频id判断是否点赞了
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			// is_like, err := IsVideoLikedByUser(uint(user_id), uint(video.ID))
+			// is_like, err := IsVideoLikedByUser(uint(user_id), uint(video.ID))s
 			// if err == nil {
 			// 	temp_response_video.Is_favorite = is_like
 			// } else {
@@ -114,7 +114,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			wait_group.Done()
 		}(video, &temp_response_video)
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			temp_response_video.Id = int(video.ID)
+			temp_response_video.Id = int64(video.ID)
 			temp_response_video.Play_url = video.PlayURL
 			temp_response_video.Cover_url = video.CoverURL
 			temp_response_video.Title = video.Title
@@ -145,13 +145,13 @@ func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (in
 	}
 }
 
-func (videoService *VideoServiceImp) PublishList(user_id int) ([]ResponseVideo, error) {
+func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo, error) {
 
-	dao_video_list, err := videoService.GetVideoListByAuthorID(int64(user_id))
+	dao_video_list, err := videoService.GetVideoListByAuthorID(user_id)
 	if err != nil {
 		return nil, err
 	}
-	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
+	response_video_list, err := makeResponseVideo(dao_video_list, videoService, user_id)
 	if err != nil {
 		return nil, err
 	}
@@ -165,10 +165,10 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	dao.SetDefault(database.DB)
 	// 在这里查询
 	V := dao.Video
-	// fmt.Println(V)
+	fmt.Println(V)
 	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
-	fmt.Println(latest_time)
-	fmt.Println(len(result))
+	// fmt.Println(latest_time)
+	// fmt.Println(len(result))
 	if err != nil {
 		fmt.Println("查询最新时间的videos出错了")
 		result = nil
@@ -179,7 +179,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 
 func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
 	V := dao.Video
-	fmt.Println(V)
+	// fmt.Println(V)
 	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
 	if err != nil || result == nil || len(result) == 0 {
 		return nil, err

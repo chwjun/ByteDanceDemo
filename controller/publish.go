@@ -52,7 +52,17 @@ func Publish(c *gin.Context) {
 
 // PublishList all users have same publish video list
 func PublishList(c *gin.Context) {
-	user_id := c.GetInt("userID")
+	user_id := int64(0)
+	user_id_temp, exits := c.Get("userID")
+	if !exits {
+		user_id = int64(0)
+	}
+	switch user_id_temp.(type) {
+	case int64:
+		user_id = user_id_temp.(int64)
+	default:
+		user_id = int64(0)
+	}
 	videoservice := service.NewVSIInstance()
 	video_list, err := videoservice.PublishList(user_id)
 	if err != nil {
