@@ -4,7 +4,7 @@ package middleware
 import (
 	redis2 "bytedancedemo/database/redis"
 	"github.com/gin-gonic/gin"
-	"github.com/gookit/slog"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,7 +17,7 @@ func RateLimitMiddleware(limit int64) gin.HandlerFunc {
 		result, err := redis2.RateLimitClient.Incr(key).Result()
 		redis2.RateLimitClient.Expire(key, time.Minute)
 		if err != nil {
-			slog.Fatalf("redis出错 %v", err)
+			zap.L().Error("redis连接失败", zap.Error(err))
 			return
 		}
 		if result > limit {
@@ -25,7 +25,7 @@ func RateLimitMiddleware(limit int64) gin.HandlerFunc {
 				"code": http.StatusTooManyRequests,
 				"msg":  "请求过于频繁",
 			})
-			slog.Warn("请求过于频繁")
+			zap.L().Warn("请求过于频繁")
 			c.Abort()
 			return
 		}

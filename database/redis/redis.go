@@ -4,6 +4,7 @@ package redis
 import (
 	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var (
@@ -16,4 +17,9 @@ func Init() {
 		Password: viper.GetString("settings.redis.password"),
 		DB:       0,
 	})
+	if RateLimitClient == nil {
+		zap.L().Error("redis初始化失败")
+	} else {
+		zap.L().Debug("redis初始化成功")
+	}
 }

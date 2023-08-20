@@ -5,13 +5,13 @@ import (
 	"bytedancedemo/database/mysql"
 	"github.com/casbin/casbin/v2"
 	gormAdapter "github.com/casbin/gorm-adapter/v2"
-	"github.com/gookit/slog"
+	"go.uber.org/zap"
 )
 
 func Setup() {
 	e, err := GetCasbin()
 	if err != nil {
-		slog.Fatalf("casbin加载失败 %v", err)
+		zap.L().Error("权限管理系统加载失败", zap.Error(err))
 	}
 	{
 		_, _ = e.AddPolicy("tourist", "/douyin/feed/", "GET")
@@ -63,9 +63,8 @@ func GetCasbin() (*casbin.Enforcer, error) {
 		return nil, err
 	}
 	if err := e.LoadPolicy(); err == nil {
-		return e, err
+		return e, nil
 	} else {
-		slog.Fatalf("权限管理系统加载失败 %v", err)
 		return nil, err
 	}
 }

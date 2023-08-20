@@ -7,6 +7,7 @@ import (
 	"bytedancedemo/database/redis"
 	"bytedancedemo/utils/casbin"
 	"bytedancedemo/utils/gen"
+	"bytedancedemo/utils/log"
 	"github.com/gookit/slog"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,7 @@ func init() {
 func run() {
 	slog.Info("开始环境初始化...")
 	config2.Init(config)
+	log.InitLogger()
 	mysql.Init()
 	redis.Init()
 	gen.Setup()

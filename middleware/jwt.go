@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -26,6 +27,7 @@ func JWTMiddleware(c *gin.Context) {
 	} else {
 		claims, err := token.ParseToken([]byte(viper.GetString("settings.jwt.secretKey")), tokenString)
 		if err != nil {
+			zap.L().Error("token非法", zap.Error(err))
 			c.JSON(http.StatusUnauthorized, fmt.Sprintf("token非法 %v", err))
 			c.Abort()
 			return

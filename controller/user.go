@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -110,6 +111,7 @@ func Login(c *gin.Context) {
 				},
 			})
 		} else {
+			zap.L().Debug("登录成功", zap.Int64("userID", user.ID), zap.String("username", user.Name), zap.String("role", user.Role))
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{
 					StatusCode: 0,
@@ -130,6 +132,7 @@ func UserInfo(c *gin.Context) {
 			Response: Response{StatusCode: 1, StatusMsg: "用户不存在"},
 		})
 	} else {
+		zap.L().Debug("查询用户详情成功", zap.Any("user", user))
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 0},
 			User:     *user,

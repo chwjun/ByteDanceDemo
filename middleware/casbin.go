@@ -5,14 +5,14 @@ import (
 	"bytedancedemo/utils/casbin"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gookit/slog"
+	"go.uber.org/zap"
 	"net/http"
 )
 
 func CasbinMiddleware(c *gin.Context) {
 	e, err := casbin.GetCasbin()
 	if err != nil {
-		slog.Fatalf("casbin中间件出错 %v", err)
+		zap.L().Error("casbin中间件出错", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"msg": fmt.Sprintf("casbin中间件出错 %v", err),
 		})
@@ -22,7 +22,7 @@ func CasbinMiddleware(c *gin.Context) {
 	role := c.GetString("role")
 	allow, err := e.Enforce(role, c.Request.URL.Path, c.Request.Method)
 	if err != nil {
-		slog.Fatalf("casbin中间件出错 %v", err)
+		zap.L().Error("casbin中间件出错", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"msg": fmt.Sprintf("casbin中间件出错 %v", err),
 		})

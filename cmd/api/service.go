@@ -8,6 +8,7 @@ import (
 	"bytedancedemo/database/mysql"
 	"bytedancedemo/database/redis"
 	"bytedancedemo/router"
+	"bytedancedemo/utils/log"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,7 @@ var (
 		Long:  "抖音极简版APP服务器",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
+			log.InitLogger()
 			mysql.Init()
 			redis.Init()
 			go api.RunMessageServer()

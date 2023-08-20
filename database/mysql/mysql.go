@@ -3,8 +3,8 @@ package mysql
 
 import (
 	"fmt"
-	"github.com/gookit/slog"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	_ "gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -26,9 +26,9 @@ func Init() {
 		Logger: logger.Default.LogMode(logger.LogLevel(logLevel)),
 	})
 	if err != nil {
-		slog.Fatalf("mysql连接失败 %v", err)
+		zap.L().Error("mysql连接失败", zap.String("DSN", DSN), zap.Error(err))
 	} else {
-		slog.Debug("mysql连接成功")
+		zap.L().Debug("mysql连接成功", zap.String("DSN", DSN))
 	}
 	DB = db
 }
