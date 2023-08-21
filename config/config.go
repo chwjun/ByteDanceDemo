@@ -9,10 +9,15 @@ import (
 )
 
 const OSS_USER_AVATAR_DIR = "your_avatar_directory_here"
+const GO_STARTER_TIME = "2006-01-02 15:04:05"
+const MQ_URL = "amqp://guest:guest@43.140.203.85:5672/"
+
+const (
+	RedisAddr = "43.140.203.85:6379"
+	RedisPwd  = ""
+)
 
 //const ExpireTime = 100
-
-const GO_STARTER_TIME = "2006-01-02 15:04:05"
 
 // 视频模块相关配置
 const (

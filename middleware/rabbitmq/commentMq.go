@@ -1,8 +1,8 @@
 package rabbitmq
 
 import (
+	"bytedancedemo/repository"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/repository"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"strconv"

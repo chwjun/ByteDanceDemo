@@ -1,13 +1,13 @@
 package service
 
 import (
+	"bytedancedemo/config"
+	"bytedancedemo/middleware/rabbitmq"
+	"bytedancedemo/middleware/redis"
+	"bytedancedemo/model"
+	"bytedancedemo/repository"
 	"encoding/json"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
-	"github.com/RaymondCode/simple-demo/middleware/redis"
-	"github.com/RaymondCode/simple-demo/model"
-	"github.com/RaymondCode/simple-demo/repository"
 	"log"
 	"math/rand"
 	"sort"

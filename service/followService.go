@@ -10,7 +10,7 @@ type FriendUser struct {
 type FollowService interface {
 
 	/*
-		模块业务所需的服务接口
+		模块业务接口
 	*/
 	// 当前用户关注目标用户
 	FollowAction(userId int64, targetId int64) (bool, error)
@@ -24,7 +24,7 @@ type FollowService interface {
 	GetFriends(userId int64) ([]FriendUser, error)
 
 	/*
-		模块对外提供的服务接口
+		模块对外服务接口
 	*/
 	// 根据用户id查询关注数
 	GetFollowingCnt(userId int64) (int64, error)

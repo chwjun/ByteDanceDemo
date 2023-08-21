@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"bytedancedemo/config"
+	"bytedancedemo/dao"
+	"bytedancedemo/model"
 	"log"
 	"sync"
-
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/model"
+	"time"
 )
 
 type Follow struct {
@@ -77,12 +78,16 @@ func (*FollowDao) FindEverFollowing(userId int64, targetId int64) (*model.Relati
 
 // InsertFollowRelation 给定用户和目标对象id，插入其关注关系。
 func (*FollowDao) InsertFollowRelation(userId int64, targetId int64) (bool, error) {
-
+	startTimeStr := time.Now().Format(config.GO_STARTER_TIME)
+	startTime, er := time.Parse(config.GO_STARTER_TIME, startTimeStr)
+	if er != nil {
+		log.Println(er)
+	}
 	follow := &model.Relation{
 		UserID:      userId,
 		FollowingID: targetId,
 		Followed:    1,
-		//CreatedAt:   time.Now().Format(config.GO_STARTER_TIME),
+		CreatedAt:   startTime,
 	}
 
 	// 将关注关系插入到数据库
@@ -153,14 +158,7 @@ func (*FollowDao) GetFollowingsInfo(userId int64) ([]int64, int64, error) {
 	}
 
 	// 查询正在关注的用户总数
-	var totalFollowings int64
-	totalFollowings, err = f.
-		Where(f.UserID.Eq(userId), f.Followed.Eq(1)).
-		Count()
-	if err != nil {
-		log.Println(err)
-		return nil, 0, err
-	}
+	totalFollowings := int64(len(followingIds))
 
 	return followingIds, totalFollowings, nil
 
@@ -182,14 +180,7 @@ func (*FollowDao) GetFollowersInfo(userId int64) ([]int64, int64, error) {
 	}
 
 	// 查询粉丝总数
-	var totalFollowers int64
-	totalFollowers, err = f.
-		Where(f.FollowingID.Eq(userId), f.Followed.Eq(1)).
-		Count()
-	if err != nil {
-		log.Println(err)
-		return nil, 0, err
-	}
+	totalFollowers := int64(len(followerIds))
 
 	return followerIds, totalFollowers, nil
 }

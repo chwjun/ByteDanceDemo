@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/RaymondCode/simple-demo/repository"
+	"bytedancedemo/repository"
 )
 
 // CommentService 接口定义

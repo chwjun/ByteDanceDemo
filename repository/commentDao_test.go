@@ -2,11 +2,11 @@
 package repository
 
 import (
+	"bytedancedemo/config"
+	"bytedancedemo/dao"
+	"bytedancedemo/database"
+	"bytedancedemo/model"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/database"
-	"github.com/RaymondCode/simple-demo/model"
 	"strconv"
 	"testing"
 )

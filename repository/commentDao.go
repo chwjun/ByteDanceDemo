@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/model"
+	"bytedancedemo/dao"
+	"bytedancedemo/model"
 	"github.com/gookit/slog"
 )
 

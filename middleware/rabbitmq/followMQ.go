@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/repository"
+	"bytedancedemo/config"
+	"bytedancedemo/repository"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -184,9 +185,9 @@ func (r *FollowMQ) consumerFollowDel(msgs <-chan amqp.Delivery) {
 func newFollowRabbitMQ(queueName string, exchangeName string, key string) *FollowMQ {
 	followMQ := &FollowMQ{
 		RabbitMQ:  *BaseRmq,
-		QueueName: "my_follow_queue",
-		Exchange:  "my_follow_exchange",
-		Key:       "my_follow_key",
+		QueueName: queueName,
+		Exchange:  exchangeName,
+		Key:       key,
 	}
 	return followMQ
 }

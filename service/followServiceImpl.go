@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
-	"github.com/RaymondCode/simple-demo/middleware/redis"
-	"github.com/RaymondCode/simple-demo/repository"
+	"bytedancedemo/config"
+	"bytedancedemo/middleware/rabbitmq"
+	"bytedancedemo/middleware/redis"
+	"bytedancedemo/repository"
 )
 
 // FollowServiceImp 该结构体继承FollowService接口。
@@ -580,7 +580,7 @@ func (followService *FollowServiceImp) BuildUser(userId int64, users []User, ids
 		// 根据传入的buildtype决定是哪种业务的user构建
 		if buildtype == 1 {
 			// 粉丝用户的isfollow属性需要调用接口再确认一下
-			users[i].IsFollow, _ = followService.CheckIsFollowing(ids[i], userId) //应改为：followService.CheckIsFollowing(ids[i]，userId)
+			users[i].IsFollow, _ = followService.CheckIsFollowing(userId, ids[i])
 		} else {
 			// 关注用户的isfollow属性确定是true
 			users[i].IsFollow = true

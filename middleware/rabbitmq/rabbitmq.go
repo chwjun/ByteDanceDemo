@@ -2,10 +2,9 @@ package rabbitmq
 
 import (
 	"fmt"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spf13/viper"
 	"log"
-
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var BaseRmq *RabbitMQ

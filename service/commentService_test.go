@@ -1,15 +1,15 @@
 package service
 
 import (
+	"bytedancedemo/config"
+	"bytedancedemo/dao"
+	"bytedancedemo/database"
+	"bytedancedemo/middleware/rabbitmq"
 	"fmt"
-	"github.com/RaymondCode/simple-demo/config"
-	"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/database"
-	"github.com/RaymondCode/simple-demo/middleware/rabbitmq"
 
-	//"github.com/RaymondCode/simple-demo/dao"
-	"github.com/RaymondCode/simple-demo/middleware/redis"
-	"github.com/RaymondCode/simple-demo/model"
+	//"bytedancedemo/dao"
+	"bytedancedemo/middleware/redis"
+	"bytedancedemo/model"
 	"log"
 	"testing"
 )

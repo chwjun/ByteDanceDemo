@@ -8,7 +8,7 @@ import (
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/middleware/redis"
 	"bytedancedemo/router"
-	//"github.com/RaymondCode/simple-demo/service"
+	//"bytedancedemo/service"
 	"github.com/spf13/cobra"
 )
 
@@ -21,16 +21,13 @@ var (
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
 			database.Init()
-<<<<<<< HEAD
 			redis.InitRedis()
 			rabbitmq.InitRabbitMQ()
 			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()
 			//	go service.RunMessageServer()
 			dao.SetDefault(database.DB)
-=======
-			//go service.RunMessageServer()
->>>>>>> d943dc5466637f743705e1147de51792bb031661
+
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()

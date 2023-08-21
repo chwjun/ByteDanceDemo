@@ -15,10 +15,7 @@ import (
 	"gorm.io/gen/field"
 
 	"gorm.io/plugin/dbresolver"
-
-
 	"bytedancedemo/model"
-
 )
 
 func newRelation(db *gorm.DB, opts ...gen.DOOption) relation {

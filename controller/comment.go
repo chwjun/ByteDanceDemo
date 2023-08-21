@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/RaymondCode/simple-demo/model"
-	"github.com/RaymondCode/simple-demo/service"
-	"github.com/RaymondCode/simple-demo/utils/sensetive"
+	"bytedancedemo/model"
+	"bytedancedemo/service"
+	"bytedancedemo/utils/sensetive"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"

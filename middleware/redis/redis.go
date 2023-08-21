@@ -96,6 +96,12 @@ func InitRedis() {
 		Password: ProRedisPwd,
 		DB:       13,
 	})
+	_, err := RdbTest.Ping(Ctx).Result()
+	if err != nil {
+		log.Panicf("连接 redis 错误，错误信息: %v", err)
+	} else {
+		log.Println("Redis 连接成功！")
+	}
 }
 
 // 测试连接 Redis
