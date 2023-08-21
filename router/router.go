@@ -3,13 +3,10 @@ package router
 import (
 	"bytedancedemo/controller"
 	"bytedancedemo/middleware"
-<<<<<<< HEAD
-	"github.com/gin-gonic/gin"
-=======
->>>>>>> 5ea746bc9f339ea98ab822949169980fb29f3484
-	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"time"
 )
 
 func Setup() {
