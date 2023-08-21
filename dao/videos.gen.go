@@ -16,7 +16,9 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/RaymondCode/simple-demo/model"
+
+	"bytedancedemo/model"
+
 )
 
 func newVideo(db *gorm.DB, opts ...gen.DOOption) video {

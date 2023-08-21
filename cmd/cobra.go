@@ -2,9 +2,9 @@
 package cmd
 
 import (
+	"bytedancedemo/cmd/api"
+	"bytedancedemo/cmd/migrate"
 	"errors"
-	"github.com/RaymondCode/simple-demo/cmd/api"
-	"github.com/RaymondCode/simple-demo/cmd/migrate"
 	"github.com/gookit/slog"
 	"github.com/spf13/cobra"
 	"os"

@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytedancedemo/model"
 	"fmt"
 	"log"
 
-	"github.com/RaymondCode/simple-demo/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

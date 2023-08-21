@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // FavoriteAction no practical effect, just check if token is valid
@@ -22,6 +23,6 @@ func FavoriteList(c *gin.Context) {
 		Response: Response{
 			StatusCode: 0,
 		},
-		VideoList: DemoVideos,
+		// VideoList: DemoVideos,
 	})
 }

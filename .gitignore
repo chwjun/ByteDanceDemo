@@ -1,2 +1,8 @@
 /tmp/
 /config/settings.yml
+service/CommentService.go
+service/CommentServiceImpl.go
+service/UserServiceImpl.go
+service/CommentService.go
+service/CommentService.go
+config/setting.yml
