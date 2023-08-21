@@ -3,14 +3,12 @@ package router
 import (
 	"bytedancedemo/controller"
 	"bytedancedemo/middleware"
-
 	"github.com/gin-gonic/gin"
-
 	"time"
 )
 
-func Setup() {
-	r := gin.New()
+func InitRouter(r *gin.Engine) {
+
 	r.Use(middleware.RateLimitMiddleware(time.Second, 20, 5))
 	r.Use(middleware.LoggerMiddleware)
 	r.Use(middleware.ErrorMiddleware)
