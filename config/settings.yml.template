@@ -1,7 +1,6 @@
 settings:
   application:
     rateLimit: 50            # 请求限流阈值
-    mode:                    # 运行模式 控制日志输出等 0-debug 1-release 2-test
   mysql:
     host: 127.0.0.1          # MySQL主机
     port: 3306               # MySQL端口号
@@ -32,3 +31,4 @@ settings:
     maxAge:                  # 日志文件保留时间 天
     maxBackups:              # 日志文件保存最大数量 0表示全部保存
     compress:                # 日志文件是否压缩
+    mode:                    # 运行模式 控制日志输出等 debug release test

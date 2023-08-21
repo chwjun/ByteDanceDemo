@@ -16,7 +16,7 @@ type Config struct {
 	MaxAge     int           `json:"max_age"`     // MaxAge 是根据文件名中编码的时间戳保留旧日志文件的最大天数。
 	MaxBackups int           `json:"max_backups"` // MaxBackups 是要保留的旧日志文件的最大数量。默认是保留所有旧的日志文件（尽管 MaxAge 可能仍会导致它们被删除。）
 	Compress   bool          `json:"compress"`    // Compress 日志文件是否压缩
-	Mode       int           `json:"mode"`        // Mode 日志模式
+	Mode       string        `json:"mode"`        // Mode 日志模式
 }
 
 func loadLogConfig() Config {
@@ -27,12 +27,15 @@ func loadLogConfig() Config {
 		MaxAge:     viper.GetInt("settings.log.maxAge"),
 		MaxBackups: viper.GetInt("settings.log.maxBackups"),
 		Compress:   viper.GetBool("settings.log.compress"),
-		Mode:       viper.GetInt("settings.log.mode"),
+		Mode:       viper.GetString("settings.log.mode"),
 	}
 }
 
-func InitLogger() {
+func InitLogger(mode string) {
 	lCfg := loadLogConfig()
+	if mode != lCfg.Mode {
+		lCfg.Mode = mode
+	}
 	writeSyncer := getLogWriter(lCfg.FileName, lCfg.MaxSize, lCfg.MaxBackups, lCfg.MaxAge, lCfg.Compress, lCfg.Mode)
 	encoder := getEncoder(lCfg.Mode)
 
@@ -40,13 +43,14 @@ func InitLogger() {
 	logger := zap.New(core, zap.AddCaller())
 
 	zap.ReplaceGlobals(logger)
-	zap.L().Debug("日志模块初始化成功")
+	zap.L().Debug("日志模块初始化成功", zap.String("mode", mode))
+
 }
 
 // 负责设置 encoding 的日志格式
-func getEncoder(mode int) zapcore.Encoder {
+func getEncoder(mode string) zapcore.Encoder {
 	var encodeConfig zapcore.EncoderConfig
-	if mode == 0 {
+	if mode == "debug" {
 		encodeConfig = zap.NewDevelopmentEncoderConfig()
 	} else {
 		encodeConfig = zap.NewProductionEncoderConfig()
@@ -59,14 +63,14 @@ func getEncoder(mode int) zapcore.Encoder {
 	encodeConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 
 	encodeConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	if mode == 0 {
+	if mode == "debug" {
 		return zapcore.NewConsoleEncoder(encodeConfig)
 	}
 	return zapcore.NewJSONEncoder(encodeConfig)
 }
 
 // 负责日志写入的位置
-func getLogWriter(filename string, maxsize, maxBackup, maxAge int, compress bool, mode int) zapcore.WriteSyncer {
+func getLogWriter(filename string, maxsize, maxBackup, maxAge int, compress bool, mode string) zapcore.WriteSyncer {
 	lumberJackLogger := &lumberjack.Logger{
 		Filename:   filename,  // 文件位置
 		MaxSize:    maxsize,   // 进行切割之前,日志文件的最大大小(MB为单位)
@@ -76,7 +80,7 @@ func getLogWriter(filename string, maxsize, maxBackup, maxAge int, compress bool
 	}
 	fileWriteSyncer := zapcore.AddSync(lumberJackLogger)
 	// 生产模式下 日志只输出到日志文件 降低日志模块损耗
-	if mode == 1 {
+	if mode == "release" {
 		return fileWriteSyncer
 	}
 	consoleWriteSyncer := zapcore.Lock(os.Stdout)

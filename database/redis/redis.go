@@ -12,14 +12,15 @@ var (
 )
 
 func Init() {
+	addr := viper.GetString("settings.redis.addr")
 	RateLimitClient = redis.NewClient(&redis.Options{
-		Addr:     viper.GetString("settings.redis.addr"),
+		Addr:     addr,
 		Password: viper.GetString("settings.redis.password"),
 		DB:       0,
 	})
 	if RateLimitClient == nil {
 		zap.L().Error("redis初始化失败")
 	} else {
-		zap.L().Debug("redis初始化成功")
+		zap.L().Debug("redis初始化成功", zap.String("Addr", addr))
 	}
 }

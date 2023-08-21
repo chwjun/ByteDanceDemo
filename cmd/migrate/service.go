@@ -14,6 +14,7 @@ import (
 
 var (
 	config   string
+	mode     string
 	StartCmd = &cobra.Command{
 		Use:     "init",
 		Short:   "初始化数据库",
@@ -27,12 +28,13 @@ var (
 
 func init() {
 	StartCmd.PersistentFlags().StringVarP(&config, "config", "c", "config/settings.yml", "配置文件路径")
+	StartCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "debug", "运行模式")
 }
 
 func run() {
 	slog.Info("开始环境初始化...")
 	config2.Init(config)
-	log.InitLogger()
+	log.InitLogger(mode)
 	mysql.Init()
 	redis.Init()
 	gen.Setup()

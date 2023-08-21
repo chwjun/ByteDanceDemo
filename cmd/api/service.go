@@ -10,17 +10,21 @@ import (
 	"bytedancedemo/router"
 	"bytedancedemo/utils/log"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+	"os"
+	"os/signal"
 )
 
 var (
 	config   string
+	mode     string
 	StartCmd = &cobra.Command{
 		Use:   "server",
 		Short: "服务入口",
 		Long:  "抖音极简版APP服务器",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
-			log.InitLogger()
+			log.InitLogger(mode)
 			mysql.Init()
 			redis.Init()
 			go api.RunMessageServer()
@@ -34,8 +38,15 @@ var (
 
 func init() {
 	StartCmd.PersistentFlags().StringVarP(&config, "config", "c", "config/settings.yml", "配置文件路径")
+	StartCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "debug", "运行模式")
 }
 
 func run() {
-	router.Setup()
+	go router.Setup()
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	zap.L().Info("监听中断中...")
+	<-quit
+	zap.L().Sync()
+	zap.L().Info("关闭服务器...")
 }
