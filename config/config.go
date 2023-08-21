@@ -6,6 +6,7 @@ import (
 
 	"github.com/gookit/slog"
 	"github.com/spf13/viper"
+	"log"
 )
 
 const OSS_USER_AVATAR_DIR = "your_avatar_directory_here"
@@ -40,7 +41,8 @@ func Init(configFilePath string) {
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("出问题了")
 		slog.Errorf("加载配置信息失败 %v", err)
+
 	} else {
-		slog.Debug("加载配置信息成功")
+		log.Println("加载配置信息成功！")
 	}
 }

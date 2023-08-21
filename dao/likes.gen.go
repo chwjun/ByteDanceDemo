@@ -17,7 +17,6 @@ import (
 	"gorm.io/plugin/dbresolver"
 
 	"bytedancedemo/model"
-
 )
 
 func newLike(db *gorm.DB, opts ...gen.DOOption) like {

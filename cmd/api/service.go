@@ -4,16 +4,24 @@ package api
 import (
 	config2 "bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database" ///重复
+	"bytedancedemo/database/mysql"
+
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/middleware/redis"
 	"bytedancedemo/router"
 	//"bytedancedemo/service"
+
+	"bytedancedemo/utils/log"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+	"os"
+	"os/signal"
 )
 
 var (
 	config   string
+	mode     string
 	StartCmd = &cobra.Command{
 		Use:   "server",
 		Short: "服务入口",
@@ -26,8 +34,10 @@ var (
 			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()
 			//	go service.RunMessageServer()
-			dao.SetDefault(database.DB)
-
+			dao.SetDefault(database.DB) ///重复
+			log.InitLogger(mode)        //日志重复
+			mysql.Init()                //重复init
+			dao.SetDefault(mysql.DB)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()
@@ -37,8 +47,15 @@ var (
 
 func init() {
 	StartCmd.PersistentFlags().StringVarP(&config, "config", "c", "config/settings.yml", "配置文件路径")
+	StartCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "debug", "运行模式")
 }
 
 func run() {
-	router.Setup()
+	go router.Setup()
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	zap.L().Info("监听中断中...")
+	<-quit
+	zap.L().Sync()
+	zap.L().Info("关闭服务器...")
 }

@@ -1,9 +1,8 @@
-// Package utils @Author: youngalone [2023/8/7]
+// Package gen @Author: youngalone [2023/8/7]
 package gen
 
 import (
-	"bytedancedemo/database"
-
+	"bytedancedemo/database/mysql"
 	"gorm.io/gen"
 )
 
@@ -18,7 +17,7 @@ func Setup() {
 		FieldWithIndexTag: false,
 		FieldWithTypeTag:  true,
 	})
-	g.UseDB(database.DB)
+	g.UseDB(mysql.DB)
 	allModel := g.GenerateAllTable()
 	g.ApplyBasic(allModel...)
 	g.Execute()

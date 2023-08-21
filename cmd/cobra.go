@@ -5,8 +5,8 @@ import (
 	"bytedancedemo/cmd/api"
 	"bytedancedemo/cmd/migrate"
 	"errors"
-	"github.com/gookit/slog"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 )
 
@@ -21,7 +21,7 @@ var RootCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		slog.Info("欢迎使用抖音极简版 -h查看命令")
+		log.Println("欢迎使用抖音极简版 -h查看命令")
 	},
 }
 

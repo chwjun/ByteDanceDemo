@@ -3,7 +3,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gookit/slog"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -12,5 +12,11 @@ func LoggerMiddleware(c *gin.Context) {
 	c.Next()
 	endTime := time.Now()
 	durationTime := endTime.Sub(startTime)
-	slog.Infof("%v | %v | %v | %v | \"%v\"", c.Request.Method, c.Writer.Status(), durationTime, c.ClientIP(), c.Request.RequestURI)
+	zap.L().Info("",
+		zap.String("Method", c.Request.Method),
+		zap.Int("Status", c.Writer.Status()),
+		zap.Duration("durationTime", durationTime),
+		zap.String("IP", c.ClientIP()),
+		zap.String("URI", c.Request.RequestURI),
+	)
 }

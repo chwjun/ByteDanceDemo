@@ -1,6 +1,10 @@
 settings:
   application:
+<<<<<<< HEAD
     rateLimit:
+=======
+    rateLimit: 50            # 请求限流阈值
+>>>>>>> a324faaa37d2d1cd826c0ed73646108424e3e386
   mysql:
     host:
     port:
@@ -9,19 +13,26 @@ settings:
     password:
     logLevel:
   jwt:
-    secretKey:
-    expirationTime:
+    secretKey: 123456        # jwt加密私钥
+    expirationTime: 24       # token过期时间 （小时）
   oss:
-    avatar:
-    backgroundImage:
-    signature:
+    avatar:                  # 头像
+    backgroundImage:         # 背景图
+    signature:               # 个性签名
   redis:
-    host:
-    port:
-    password:
-    expirationTime:
+    addr: 127.0.0.1:6379     # redis url
+    password:                # redis密码
+    expirationTime: 5        # redis键值过期时间
   rabbitMQ:
-    host:
-    port:
-    username:
-    password:
+    host:                    # rabbitMQ主机
+    port:                    # rabbitMQ端口号
+    username:                # rabbitMQ用户名
+    password:                # rabbitMQ密码
+  log:
+    path:                    # 日志文件存放路径
+    level:                   # 日志等级
+    maxSize:                 # 日志轮转 单个文件最大空间 MB
+    maxAge:                  # 日志文件保留时间 天
+    maxBackups:              # 日志文件保存最大数量 0表示全部保存
+    compress:                # 日志文件是否压缩
+    mode:                    # 运行模式 控制日志输出等 debug release test

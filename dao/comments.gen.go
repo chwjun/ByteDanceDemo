@@ -17,7 +17,6 @@ import (
 	"gorm.io/plugin/dbresolver"
 
 	"bytedancedemo/model"
-
 )
 
 func newComment(db *gorm.DB, opts ...gen.DOOption) comment {
