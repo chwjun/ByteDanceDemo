@@ -3,6 +3,8 @@ package service
 import (
 	"fmt"
 	"testing"
+
+	"github.com/RaymondCode/simple-demo/util"
 )
 
 func BenchmarkFavoriteList(b *testing.B) {
@@ -20,18 +22,7 @@ func BenchmarkFavoriteList(b *testing.B) {
 		_, _ = service.FavoriteList(userID)
 	}
 }
-func BenchmarkGetLikeCounts(b *testing.B) {
 
-	videoIDs := []uint{1, 2, 3} // Replace this with the actual number suited for your test.
-	b.ResetTimer()              // start the timer
-
-	for i := 0; i < b.N; i++ {
-		_, err := GetLikeCounts(videoIDs)
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
-}
 func TestGetFavoriteVideoInfoByUserID(t *testing.T) {
 	// 创建服务实例
 	service := &FavoriteServiceImpl{}
@@ -170,7 +161,7 @@ func TestGetLikeCounts(t *testing.T) {
 	videoIDs := []uint{1, 2, 3}
 
 	// 调用函数
-	result, err := GetLikeCounts(videoIDs)
+	result, err := util.GetUserFavorites(videoIDs)
 	if err != nil {
 		t.Fatalf("GetLikeCounts failed with error: %v", err)
 	}

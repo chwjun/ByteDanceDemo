@@ -13,8 +13,12 @@ type FavoriteActionRequest struct {
 }
 
 func FavoriteAction(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
 
-	userId := int64(1)
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
+		return
+	}
 	var req FavoriteActionRequest
 
 	// 尝试将请求数据绑定到我们的请求结构中
@@ -24,8 +28,8 @@ func FavoriteAction(c *gin.Context) {
 	}
 
 	s := service.FavoriteServiceImpl{}
-	s.StartFavoriteAction()                                                   // 创建 FavoriteServiceImpl 实例
-	resp, err := s.FavoriteAction(userId, int64(req.VideoID), req.ActionType) // 使用实例调用方法
+	s.StartFavoriteAction()                                                               // 创建 FavoriteServiceImpl 实例
+	resp, err := s.FavoriteAction(int64(userIDValue), int64(req.VideoID), req.ActionType) // 使用实例调用方法
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
 		return
@@ -37,20 +41,18 @@ func FavoriteAction(c *gin.Context) {
 
 func FavoriteList(c *gin.Context) {
 	// 从上下文中获取userID
-	userID := int64(1)
-	//userIDValue, exists := c.Get("userID")
+	userIDValue, exists := c.Get("userID")
 
-	//if !exists {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
-	//	return
-	//}
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
+		return
+	}
 
-	// 断言userID为期望的类型，例如int64
-	//userID, ok := userIDValue.(int64)
-	//if !ok {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID has an incorrect type"})
-	//	return
-	//}
+	userID, ok := userIDValue.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID has an incorrect type"})
+		return
+	}
 
 	// 创建服务
 	s := service.FavoriteServiceImpl{}

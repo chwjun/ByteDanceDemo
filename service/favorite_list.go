@@ -2,6 +2,9 @@ package service
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/RaymondCode/simple-demo/util"
 
 	"github.com/RaymondCode/simple-demo/dao"
 )
@@ -34,7 +37,7 @@ func (s *FavoriteServiceImpl) FavoriteList(userID int64) (FavoriteListResponse, 
 
 func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Video, error) {
 	videoIDs, err := GetLikedVideoIDs(uint(userID))
-	//log.Printf("videoIDs: %+v", videoIDs)
+	log.Printf("videoIDs: %+v", videoIDs)
 	if err != nil {
 		return nil, fmt.Errorf("获取点赞视频ID失败: %v", err)
 	}
@@ -48,7 +51,7 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 	if err != nil {
 		return nil, fmt.Errorf("获取评论总数失败: %v", err)
 	}
-	likeCounts, err := GetLikeCounts(videoIDs)
+	likeCounts, err := util.GetVideosLikes(videoIDs)
 	if err != nil {
 		return nil, fmt.Errorf("获取点赞总数失败: %v", err)
 	}
@@ -84,15 +87,15 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 		isFavorite := likedVideos[videoID]
 		authorDetail := authorDetails[videoDetail.AuthorID]
 		//打印videid
-		//log.Printf("videoID: %+v", videoID)
-		//log.Printf("videoDetail: %+v", videoDetail)
-		//log.Printf("videoDetail.PlayURL: %s", videoDetail.PlayURL)
-		//log.Printf("videoDetail.CoverURL: %s", videoDetail.CoverURL)
-		//log.Printf("videoDetail.Title: %s", videoDetail.Title)
-		//log.Printf("commentCount: %d", commentCount)
-		//log.Printf("likeCount: %d", likeCount)
-		//log.Printf("isFavorite: %v", isFavorite)
-		//log.Printf("authorDetail: %+v", authorDetail)
+		log.Printf("videoID: %+v", videoID)
+		log.Printf("videoDetail: %+v", videoDetail)
+		log.Printf("videoDetail.PlayURL: %s", videoDetail.PlayURL)
+		log.Printf("videoDetail.CoverURL: %s", videoDetail.CoverURL)
+		log.Printf("videoDetail.Title: %s", videoDetail.Title)
+		log.Printf("commentCount: %d", commentCount)
+		log.Printf("likeCount: %d", likeCount)
+		log.Printf("isFavorite: %v", isFavorite)
+		log.Printf("authorDetail: %+v", authorDetail)
 
 		video := &Video{
 			ID:            int64(videoID),
@@ -104,12 +107,12 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 			IsFavorite:    isFavorite,
 			Title:         videoDetail.Title,
 		}
-		//log.Printf("video: %+v", video)
+		log.Printf("video: %+v", video)
 		videos = append(videos, video)
-		//log.Printf("videos: %+v", videos)
+		log.Printf("videos: %+v", videos) /**/
 
 	}
-	//log.Printf("运行结束")
+	log.Printf("运行结束")
 	return videos, nil
 }
 
@@ -143,7 +146,7 @@ func (s *FavoriteServiceImpl) GetUserInfoByIDs(requestingUserID int64, userIDs [
 	if err != nil {
 		return nil, err
 	}
-	FavoriteCount, err := GetUserTotalLikes(userIDs)
+	FavoriteCount, err := util.GetUserFavorites(userIDs)
 
 	if err != nil {
 		return nil, err
@@ -288,33 +291,33 @@ type VideoLikeCount struct {
 	Count   int64
 }
 
-func GetLikeCounts(videoIDs []uint) (map[uint]int64, error) {
-	var counts []*VideoLikeCount
-
-	// 使用IN操作符一次性获取所有视频的喜欢（like）数量
-	err := dao.Like.Select(dao.Like.VideoID, dao.Like.ID.Count().As("count")).
-		Where(dao.Like.VideoID.In(videoIDs...), dao.Like.Liked.Eq(1), dao.Like.DeletedAt.IsNull()).
-		Group(dao.Like.VideoID).Scan(&counts)
-
-	if err != nil {
-		return nil, fmt.Errorf("无法获取视频的喜欢（like）数量: %v", err)
-	}
-
-	// 创建一个映射以快速查找结果
-	resultsMap := make(map[uint]int64)
-	for _, count := range counts {
-		resultsMap[count.VideoID] = count.Count
-	}
-
-	// 确保所有传入的视频ID都包含在结果中
-	for _, videoID := range videoIDs {
-		if _, exists := resultsMap[videoID]; !exists {
-			resultsMap[videoID] = 0 // 如果没有喜欢（like），则计数为0
-		}
-	}
-
-	return resultsMap, nil
-}
+//func GetLikeCounts(videoIDs []uint) (map[uint]int64, error) {
+//	var counts []*VideoLikeCount
+//
+//	// 使用IN操作符一次性获取所有视频的喜欢（like）数量
+//	err := dao.Like.Select(dao.Like.VideoID, dao.Like.ID.Count().As("count")).
+//		Where(dao.Like.VideoID.In(videoIDs...), dao.Like.Liked.Eq(1), dao.Like.DeletedAt.IsNull()).
+//		Group(dao.Like.VideoID).Scan(&counts)
+//
+//	if err != nil {
+//		return nil, fmt.Errorf("无法获取视频的喜欢（like）数量: %v", err)
+//	}
+//
+//	// 创建一个映射以快速查找结果
+//	resultsMap := make(map[uint]int64)
+//	for _, count := range counts {
+//		resultsMap[count.VideoID] = count.Count
+//	}
+//
+//	// 确保所有传入的视频ID都包含在结果中
+//	for _, videoID := range videoIDs {
+//		if _, exists := resultsMap[videoID]; !exists {
+//			resultsMap[videoID] = 0 // 如果没有喜欢（like），则计数为0
+//		}
+//	}
+//
+//	return resultsMap, nil
+//}
 
 type UserCount struct {
 	UserID uint `gorm:"column:user_id"`
@@ -420,39 +423,8 @@ func GetUserTotalReceivedLikes(userIDs []uint) (map[uint]int64, error) {
 
 	return likesCount, nil
 }
-func GetUserTotalLikes(userIDs []uint) (map[uint]int64, error) {
-	likesCount := make(map[uint]int64)
 
-	// 定义一个结构体来保存查询结果
-	type LikeResult struct {
-		UserID uint
-		Count  int64
-	}
-
-	var results []LikeResult
-	err := dao.Like.
-		Where(dao.Like.UserID.In(userIDs...), dao.Like.Liked.Eq(1), dao.Like.DeletedAt.IsNull()).
-		Group(dao.Like.UserID).
-		Select(dao.Like.UserID.As("user_id"), dao.Like.ID.Count().As("count")).
-		Scan(&results)
-
-	if err != nil {
-		return nil, fmt.Errorf("无法获取用户总接收的喜欢数量: %v", err)
-	}
-
-	for _, result := range results {
-		likesCount[result.UserID] = result.Count
-	}
-
-	// 对于没有获取到喜欢数量的用户，将他们添加到map中，并设置值为0
-	for _, id := range userIDs {
-		if _, ok := likesCount[id]; !ok {
-			likesCount[id] = 0
-		}
-	}
-
-	return likesCount, nil
-}
+//因为。
 
 //func GetUserTotalReceivedLikes(userIDs []uint) (map[uint]int64, error) {
 //	// 初始化一个用户ID到其接收的总喜欢数的映射
