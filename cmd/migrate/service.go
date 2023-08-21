@@ -8,8 +8,9 @@ import (
 	"bytedancedemo/utils/casbin"
 	"bytedancedemo/utils/gen"
 	"bytedancedemo/utils/log"
-	"github.com/gookit/slog"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+	log2 "log"
 )
 
 var (
@@ -32,12 +33,12 @@ func init() {
 }
 
 func run() {
-	slog.Info("开始环境初始化...")
+	log2.Println("开始环境初始化...")
 	config2.Init(config)
 	log.InitLogger(mode)
 	mysql.Init()
 	redis.Init()
 	gen.Setup()
 	casbin.Setup()
-	slog.Info("环境初始化成功！")
+	zap.L().Info("环境初始化成功！")
 }
