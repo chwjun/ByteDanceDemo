@@ -21,7 +21,7 @@ type Message struct {
 	SenderID   int64          `gorm:"column:sender_id;type:bigint(20) unsigned;comment:发送message的user id" json:"sender_id"`       // 发送message的user id
 	ReceiverID int64          `gorm:"column:receiver_id;type:bigint(20) unsigned;comment:接收message的user id" json:"receiver_id"`   // 接收message的user id
 	Content    string         `gorm:"column:content;type:varchar(191);not null;comment:消息内容" json:"content"`                      // 消息内容
-	ActionType string         `gorm:"column:action_type;type:enum('1','2');not null;comment:消息行为，1表示发送/2表示撤回" json:"action_type"` // 消息行为，1表示发送/2表示撤回
+	ActionType int64         `gorm:"column:action_type;type:enum('1','2');not null;comment:消息行为，1表示发送/2表示撤回" json:"action_type"` // 消息行为，1表示发送/2表示撤回
 }
 
 // TableName Message's table name

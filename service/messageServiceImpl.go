@@ -4,7 +4,6 @@ import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
 	"github.com/gookit/slog"
-	"sync"
 	"time"
 )
 
@@ -13,7 +12,6 @@ type MessageServiceImpl struct {
 
 var (
 	messageServiceImpl *MessageServiceImpl
-	once               sync.Once
 )
 
 func GetMessageServiceInstance() *MessageServiceImpl {
@@ -29,9 +27,9 @@ func (messageService *MessageServiceImpl) SendMessage(userId int64, toUserId int
 		return nil
 	}
 	var message model.Message
-	message.SenderID = uint(userId)
-	message.ReceiverID = uint(toUserId)
-	message.ActionType = int(actionType)
+	message.SenderID = userId
+	message.ReceiverID = toUserId
+	message.ActionType = actionType
 	message.CreatedAt = time.Now()
 	message.UpdatedAt = time.Now()
 	message.Content = content
