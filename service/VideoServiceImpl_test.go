@@ -9,7 +9,7 @@ import (
 	// "gorm.io/driver/mysql"
 )
 
-// 吃的是单例模式
+// 测的是单例模式
 func TestNewVSIInstance(t *testing.T) {
 	vsi1 := NewVSIInstance()
 	vsi2 := NewVSIInstance()

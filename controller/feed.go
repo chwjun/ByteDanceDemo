@@ -38,7 +38,7 @@ func Feed(c *gin.Context) {
 		latest_time = time.UnixMilli(temp)
 	}
 
-	fmt.Println(latest_time)
+	// fmt.Println(latest_time)
 	videoservice := service.NewVSIInstance()
 	user_id := int64(0)
 	user_id_temp, exits := c.Get("userID")

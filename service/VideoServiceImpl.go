@@ -11,8 +11,8 @@ import (
 
 type VideoServiceImp struct {
 	UserService
-	//CommentService
-	//FavoriteService
+	CommentService
+	FavoriteService
 }
 
 var (
@@ -25,9 +25,9 @@ func NewVSIInstance() *VideoServiceImp {
 	videoServiceOnce.Do(
 		func() {
 			videoServiceImp = &VideoServiceImp{
-				UserService: &UserServiceImpl{},
-				//CommentService:  &CommentServiceImpl{},
-				//FavoriteService: &FavoriteServiceImpl{},
+				UserService:     &UserServiceImpl{},
+				CommentService:  &CommentServiceImpl{},
+				FavoriteService: &FavoriteServiceImpl{},
 			}
 		})
 	return videoServiceImp
@@ -64,53 +64,52 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 		wait_group.Add(5)
 		//根据作者id查作者信息
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			// author_id := video.AuthorID
-			// author, err := videoService.GetUserDetailsById(author_id, &user_id)
-			// if err == nil {
-			// 	temp_response_video.Author = *author
-			// } else {
-			// 	return
-			// }
-			author := User{
-				Id: 1,
+			author_id := video.AuthorID
+			author, err := videoService.GetUserDetailsById(author_id, &user_id)
+			if err == nil {
+				temp_response_video.Author = *author
+			} else {
+				temp_response_video.Author = User{}
 			}
-			temp_response_video.Author = author
+			// author := User{
+			// 	Id: 1,
+			// }
+			// temp_response_video.Author = author
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据视频id找评论总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			// comment_count, err := videoService.GetCommentCnt(video.ID)
-			// if err == nil {
-			// 	temp_response_video.Comment_count = int(comment_count)
-			// } else {
-			// 	return
-			// }
-			comment_count := 10
-			temp_response_video.Comment_count = int64(comment_count)
+			comment_count, err := videoService.GetCommentCnt(video.ID)
+			if err == nil {
+				temp_response_video.Comment_count = comment_count
+			} else {
+				temp_response_video.Comment_count = int64(0)
+			}
+			// comment_count := 10
+			// temp_response_video.Comment_count = comment_count
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据视频id找点赞总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			// like_count, err := GetLikeCount(uint(video.ID))
-			// if err == nil {
-			// 	temp_response_video.Favorite_count = int(like_count)
-			// } else {
-			// 	return
-			// }
-			like_count := 100
-			temp_response_video.Favorite_count = int64(like_count)
+			like_count, err := videoService.GetLikeCount(video.ID)
+			if err == nil {
+				temp_response_video.Favorite_count = like_count
+			} else {
+				temp_response_video.Favorite_count = int64(0)
+			}
+			// like_count := 100
+			temp_response_video.Favorite_count = like_count
 			wait_group.Done()
 		}(video, &temp_response_video)
 		// 根据当前用户id和视频id判断是否点赞了
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			// is_like, err := IsVideoLikedByUser(uint(user_id), uint(video.ID))s
-			// if err == nil {
-			// 	temp_response_video.Is_favorite = is_like
-			// } else {
-			// 	return
-			// }
-			is_like := true
-			temp_response_video.Is_favorite = is_like
+			is_like, err := videoService.IsVideoLikedByUser(user_id, video.ID)
+			if err == nil {
+				temp_response_video.Is_favorite = is_like
+			} else {
+				temp_response_video.Is_favorite = false
+			}
+			// is_like := true
 			wait_group.Done()
 		}(video, &temp_response_video)
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
