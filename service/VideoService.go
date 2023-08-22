@@ -25,6 +25,6 @@ type VideoService interface {
 	// 这里的Video是list接口返回的视频列表，不是数据库中的视频列表
 	PublishList(user_id int64) ([]ResponseVideo, error)
 	GetVideoListByAuthorID(authorId int64) ([]*model.Video, error)
-	GetVideoCountByAuthorID(authorId int64) (int, error)
+	GetVideoCountByAuthorID(authorId int64) (int64, error)
 	Test()
 }

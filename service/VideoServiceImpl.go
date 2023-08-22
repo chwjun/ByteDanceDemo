@@ -135,12 +135,12 @@ func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*
 	}
 }
 
-func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (int, error) {
+func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (int64, error) {
 	dao_video_list, err := DAOGetVideoListByAuthorID(authorId)
 	if err != nil {
 		return 0, err
 	} else {
-		return len(dao_video_list), nil
+		return int64(len(dao_video_list)), nil
 	}
 }
 
@@ -158,14 +158,12 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 }
 
-const Video_list_size = 10
-
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	dao.SetDefault(database.DB)
 	// 在这里查询
 	V := dao.Video
 	fmt.Println(V)
-	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(Video_list_size).Find()
+	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(size).Find()
 	// fmt.Println(latest_time)
 	// fmt.Println(len(result))
 	if err != nil {
