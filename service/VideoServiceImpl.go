@@ -38,16 +38,13 @@ func (videoService *VideoServiceImp) Test() {
 }
 
 func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) ([]ResponseVideo, time.Time, error) {
-
-	// fmt.Println("进入了feed")
 	// 根据最新时间查找数据库获取视频的信息
 	dao_video_list, err := GetVideosByLatestTime(latest_time)
-	fmt.Println(len(dao_video_list))
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
 		fmt.Println("Feed")
 		return nil, time.Time{}, err
 	}
-	// fmt.Println("here is Feed")
+	// 获取剩余信息，构造返回的结构体
 	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
 	if err != nil {
 		return nil, dao_video_list[len(dao_video_list)-1].CreatedAt, err
@@ -57,11 +54,13 @@ func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) 
 
 // 构造返回的视频流
 func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoServiceImp, user_id int64) ([]ResponseVideo, error) {
-	response_video_list := make([]ResponseVideo, 0, size)
+	// 返回的视频流
+	response_video_list := make([]ResponseVideo, len(dao_video_list))
 	for _, video := range dao_video_list {
 		temp_response_video := ResponseVideo{}
 		var wait_group sync.WaitGroup
 		wait_group.Add(5)
+
 		//根据作者id查作者信息
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
 			author_id := video.AuthorID
@@ -77,6 +76,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			// temp_response_video.Author = author
 			wait_group.Done()
 		}(video, &temp_response_video)
+
 		// 根据视频id找评论总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
 			comment_count, err := videoService.GetCommentCnt(video.ID)
@@ -89,6 +89,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			// temp_response_video.Comment_count = comment_count
 			wait_group.Done()
 		}(video, &temp_response_video)
+
 		// 根据视频id找点赞总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
 			like_count, err := videoService.GetLikeCount(video.ID)
@@ -101,6 +102,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			temp_response_video.Favorite_count = like_count
 			wait_group.Done()
 		}(video, &temp_response_video)
+
 		// 根据当前用户id和视频id判断是否点赞了
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
 			is_like, err := videoService.IsVideoLikedByUser(user_id, video.ID)
@@ -112,8 +114,9 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			// is_like := true
 			wait_group.Done()
 		}(video, &temp_response_video)
+		// 添加剩余信息
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			temp_response_video.Id = int64(video.ID)
+			temp_response_video.Id = video.ID
 			temp_response_video.Play_url = video.PlayURL
 			temp_response_video.Cover_url = video.CoverURL
 			temp_response_video.Title = video.Title
@@ -135,6 +138,7 @@ func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*
 	}
 }
 
+// 提供给外部的接口
 func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (int64, error) {
 	dao_video_list, err := DAOGetVideoListByAuthorID(authorId)
 	if err != nil {
@@ -158,6 +162,7 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 }
 
+// 这个是video专用的通过时间获取videolist
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	dao.SetDefault(database.DB)
 	// 在这里查询
@@ -174,6 +179,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	return result, err
 }
 
+// 数据库操作
 func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
 	V := dao.Video
 	// fmt.Println(V)
