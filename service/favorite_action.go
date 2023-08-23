@@ -1,14 +1,15 @@
 package service
 
 import (
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
+	"bytedancedemo/utils"
 	"container/heap"
 	"errors"
 	"fmt"
+	"github.com/redis/go-redis/v9"
+	"strconv"
 	"sync"
 	"time"
-
-	"bytedancedemo/utils"
 
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
@@ -266,7 +267,7 @@ func (s *FavoriteServiceImpl) FavoriteAction(userId int64, videoID int64, action
 }
 func likeVideo(userID int64, videoID int64) error {
 	// 开始一个新的事务
-	tx := database.DB.Begin()
+	tx := mysql.DB.Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -313,7 +314,7 @@ func likeVideo(userID int64, videoID int64) error {
 }
 func unlikeVideo(userID int64, videoID int64) error {
 	// 开始一个新的事务
-	tx := database.DB.Begin()
+	tx := mysql.DB.Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -347,4 +348,41 @@ func unlikeVideo(userID int64, videoID int64) error {
 
 	// 提交事务
 	return tx.Commit().Error
+}
+
+func (s *FavoriteServiceImpl) GetVideosLikes(videoIDs []int64) (map[int64]int64, error) {
+	ctx := utils.GlobalRedisClient.Ctx
+	pipe := utils.GlobalRedisClient.Client.Pipeline()
+
+	futures := make(map[int64]*redis.StringCmd)
+	for _, videoID := range videoIDs {
+		videoKey := fmt.Sprintf("video:%d", videoID)
+		videoLikesField := "totalVideoLikes"
+		futures[videoID] = pipe.HGet(ctx, videoKey, videoLikesField)
+	}
+
+	_, err := pipe.Exec(ctx)
+	if err != nil && err != redis.Nil {
+		return nil, fmt.Errorf("failed to execute pipeline: %v", err)
+	}
+
+	result := make(map[int64]int64)
+	for videoID, future := range futures {
+		err := future.Err()
+		if err == redis.Nil {
+			result[videoID] = 0
+			continue
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to get video likes for video %d: %v", videoID, err)
+		}
+		likesStr, _ := future.Result()
+		likes, err := strconv.ParseInt(likesStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse likes for video %d: %v", videoID, err)
+		}
+		result[videoID] = likes
+	}
+
+	return result, nil
 }

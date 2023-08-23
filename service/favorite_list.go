@@ -36,7 +36,7 @@ func (s *FavoriteServiceImpl) FavoriteList(userID int64) (FavoriteListResponse, 
 }
 
 func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Video, error) {
-	videoIDs, err := GetLikedVideoIDs(int64(userID))
+	videoIDs, err := GetLikedVideoIDs(userID)
 	log.Printf("videoIDs: %+v", videoIDs)
 	if err != nil {
 		return nil, fmt.Errorf("获取点赞视频ID失败: %v", err)
@@ -51,14 +51,9 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 	if err != nil {
 		return nil, fmt.Errorf("获取评论总数失败: %v", err)
 	}
-	likeCounts, err := utils.GetVideosLikes(videoIDs)
+	likeCounts, err := s.GetVideosLikes(videoIDs)
 	if err != nil {
 		return nil, fmt.Errorf("获取点赞总数失败: %v", err)
-	}
-
-	likedVideos, err := AreVideosLikedByUser(int64(userID), videoIDs)
-	if err != nil {
-		return nil, fmt.Errorf("判断用户是否点赞了视频失败: %v", err)
 	}
 
 	// 获取作者ID列表
@@ -76,7 +71,7 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 	// 创建作者ID到详细信息的映射
 	authorDetails := make(map[int64]User)
 	for _, author := range authors {
-		authorDetails[int64(author.ID)] = *author
+		authorDetails[author.Id] = *author
 	}
 
 	var videos []*Video
@@ -84,7 +79,6 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 		videoDetail := videoDetails[i]
 		commentCount := commentCounts[videoID]
 		likeCount := likeCounts[videoID]
-		isFavorite := likedVideos[videoID]
 		authorDetail := authorDetails[videoDetail.AuthorID]
 		////打印videid
 		//log.Printf("videoID: %+v", videoID)
@@ -98,13 +92,13 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 		//log.Printf("authorDetail: %+v", authorDetail)
 
 		video := &Video{
-			ID:            int64(videoID),
+			ID:            videoID,
 			Author:        authorDetail,
 			PlayURL:       videoDetail.PlayURL,
 			CoverURL:      videoDetail.CoverURL,
 			FavoriteCount: likeCount,
 			CommentCount:  commentCount,
-			IsFavorite:    isFavorite,
+			IsFavorite:    true,
 			Title:         videoDetail.Title,
 		}
 		log.Printf("video: %+v", video)
@@ -160,7 +154,7 @@ func (s *FavoriteServiceImpl) GetUserInfoByIDs(requestingUserID int64, userIDs [
 	for i, userID := range userIDs {
 		detail := userDetails[userID]
 		user := &User{
-			ID:              int64(userID),
+			Id:              userID,
 			Name:            detail.Name,
 			FollowCount:     followingCounts[userID].Count,
 			FollowerCount:   followerCounts[userID].Count,
@@ -486,7 +480,7 @@ type LikeVideoResult struct {
 	VideoID int64
 }
 
-func AreVideosLikedByUser(userID int64, videoIDs []int64) (map[int64]bool, error) {
+func (s *FavoriteServiceImpl) AreVideosLikedByUser(userID int64, videoIDs []int64) (map[int64]bool, error) {
 	likedVideos := make(map[int64]bool)
 
 	var results []LikeVideoResult

@@ -1,19 +1,5 @@
 package service
 
-type User struct {
-	ID              int64
-	Name            string
-	FollowCount     int64
-	FollowerCount   int64
-	IsFollow        bool
-	Avatar          string
-	BackgroundImage string
-	Signature       string
-	TotalFavorited  int64
-	WorkCount       int64
-	FavoriteCount   int64
-}
-
 type Video struct {
 	ID            int64
 	Author        User
@@ -32,10 +18,14 @@ const (
 )
 
 type FavoriteService interface {
-	FavoriteAction(videoID int64, actionType int32) (FavoriteActionResponse, error)
+	FavoriteAction(userId int64, videoID int64, actionType int32) (FavoriteActionResponse, error)
 	FavoriteList(userID int64) (FavoriteListResponse, error)
-	GetUserInfoByID(requestingUserID *int64, userID int64) (*User, error)
+	GetUserInfoByIDs(requestingUserID int64, userIDs []int64) ([]*User, error)
 	GetFavoriteVideoInfoByUserID(userID int64) ([]*Video, error)
+	// GetVideosLikes 批量查询 根据id获取点赞数
+	GetVideosLikes(videoIDs []int64) (map[int64]int64, error)
+	// AreVideosLikedByUser 查询用户喜欢的视频
+	AreVideosLikedByUser(userID int64, videoIDs []int64) (map[int64]bool, error)
 }
 
 type FavoriteActionResponse struct {

@@ -2,7 +2,7 @@ package service
 
 import (
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
 	"bytedancedemo/model"
 	"fmt"
 	"sync"
@@ -92,7 +92,8 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 
 		// 根据视频id找点赞总数
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			like_count, err := videoService.GetLikeCount(video.ID)
+			like_counts, err := videoService.GetVideosLikes([]int64{video.ID})
+			like_count := like_counts[video.ID]
 			if err == nil {
 				temp_response_video.Favorite_count = like_count
 			} else {
@@ -105,7 +106,8 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 
 		// 根据当前用户id和视频id判断是否点赞了
 		go func(video *model.Video, temp_response_video *ResponseVideo) {
-			is_like, err := videoService.IsVideoLikedByUser(user_id, video.ID)
+			is_likes, err := videoService.AreVideosLikedByUser(user_id, []int64{video.ID})
+			is_like := is_likes[video.ID]
 			if err == nil {
 				temp_response_video.Is_favorite = is_like
 			} else {
@@ -164,7 +166,7 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 // 这个是video专用的通过时间获取videolist
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
-	dao.SetDefault(database.DB)
+	dao.SetDefault(mysql.DB)
 	// 在这里查询
 	V := dao.Video
 	fmt.Println(V)

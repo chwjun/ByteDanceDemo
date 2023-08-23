@@ -2,6 +2,7 @@
 package redis
 
 import (
+	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -12,7 +13,10 @@ var (
 )
 
 func Init() {
-	addr := viper.GetString("settings.redis.addr")
+	addr := fmt.Sprintf("%s:%s",
+		viper.GetString("settings.redis.host"),
+		viper.GetString("settings.redis.port"),
+	)
 	RateLimitClient = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: viper.GetString("settings.redis.password"),

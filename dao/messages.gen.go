@@ -34,7 +34,7 @@ func newMessage(db *gorm.DB, opts ...gen.DOOption) message {
 	_message.SenderID = field.NewInt64(tableName, "sender_id")
 	_message.ReceiverID = field.NewInt64(tableName, "receiver_id")
 	_message.Content = field.NewString(tableName, "content")
-	_message.ActionType = field.NewString(tableName, "action_type")
+	_message.ActionType = field.NewInt32(tableName, "action_type")
 
 	_message.fillFieldMap()
 
@@ -52,7 +52,7 @@ type message struct {
 	SenderID   field.Int64  // 发送message的user id
 	ReceiverID field.Int64  // 接收message的user id
 	Content    field.String // 消息内容
-	ActionType field.String // 消息行为，1表示发送/2表示撤回
+	ActionType field.Int32
 
 	fieldMap map[string]field.Expr
 }
@@ -76,7 +76,7 @@ func (m *message) updateTableName(table string) *message {
 	m.SenderID = field.NewInt64(table, "sender_id")
 	m.ReceiverID = field.NewInt64(table, "receiver_id")
 	m.Content = field.NewString(table, "content")
-	m.ActionType = field.NewString(table, "action_type")
+	m.ActionType = field.NewInt32(table, "action_type")
 
 	m.fillFieldMap()
 

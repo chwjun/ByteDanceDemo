@@ -3,7 +3,7 @@ package repository
 import (
 	"bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
 	"fmt"
 	"log"
 	"testing"
@@ -11,8 +11,8 @@ import (
 
 func TestFollowDao_FindEverFollowing(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	follow, err := followDao.FindEverFollowing(1, 2)
 	if err == nil {
 		log.Default()
@@ -22,8 +22,8 @@ func TestFollowDao_FindEverFollowing(t *testing.T) {
 
 func TestFollowDao_InsertFollowRelation(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	isbool, err := followDao.InsertFollowRelation(2, 3)
 	if err == nil {
 		log.Default()
@@ -33,8 +33,8 @@ func TestFollowDao_InsertFollowRelation(t *testing.T) {
 
 func TestFollowDao_UpdateFollowRelation(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	isbool, err := followDao.UpdateFollowRelation(2, 3, 0)
 	if err == nil {
 		log.Default()
@@ -45,8 +45,8 @@ func TestFollowDao_UpdateFollowRelation(t *testing.T) {
 
 func TestFollowDao_FindFollowRelation(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	isbool, err := followDao.FindFollowRelation(2, 3)
 	if err == nil {
 		log.Default()
@@ -57,8 +57,8 @@ func TestFollowDao_FindFollowRelation(t *testing.T) {
 
 func TestFollowDao_GetFollowingsInfo(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	followingsId, followingsCnt, err := followDao.GetFollowingsInfo(1)
 
 	if err != nil {
@@ -72,8 +72,8 @@ func TestFollowDao_GetFollowingsInfo(t *testing.T) {
 
 func TestFollowDao_GetFollowersInfo(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	followersId, followersCnt, err := followDao.GetFollowersInfo(1)
 
 	if err != nil {
@@ -87,8 +87,8 @@ func TestFollowDao_GetFollowersInfo(t *testing.T) {
 
 func TestFollowDao_GetFriendsInfo(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	friendId, friendCnt, err := followDao.GetFriendsInfo(1)
 	if err != nil {
 		log.Default()
@@ -100,8 +100,8 @@ func TestFollowDao_GetFriendsInfo(t *testing.T) {
 
 func TestFollowDao_GetFollowingCnt(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	followingCount, err := followDao.GetFollowingCnt(1)
 	if err != nil {
 		log.Default()
@@ -112,8 +112,8 @@ func TestFollowDao_GetFollowingCnt(t *testing.T) {
 
 func TestFollowDao_GetFollowerCnt(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	followerCount, err := followDao.GetFollowerCnt(1)
 	if err != nil {
 		log.Default()
@@ -124,8 +124,8 @@ func TestFollowDao_GetFollowerCnt(t *testing.T) {
 
 func TestFollowDao_GetUserName(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	name, err := followDao.GetUserName(1)
 	if err != nil {
 		log.Default()

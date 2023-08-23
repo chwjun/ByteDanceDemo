@@ -12,8 +12,8 @@ import (
 )
 
 type RedisClient struct {
-	client *redis.Client
-	ctx    context.Context
+	Client *redis.Client
+	Ctx    context.Context
 }
 
 var GlobalRedisClient *RedisClient
@@ -45,8 +45,8 @@ func NewRedisClient(addr string, password string, db int) *RedisClient {
 	}
 
 	return &RedisClient{
-		client: rdb,
-		ctx:    ctx,
+		Client: rdb,
+		Ctx:    ctx,
 	}
 }
 func UpdateLikeCounts(userID int64, videoID int64, like bool) error {
@@ -63,8 +63,8 @@ func UpdateLikeCounts(userID int64, videoID int64, like bool) error {
 	}
 
 	// 获取 Redis 上下文
-	ctx := GlobalRedisClient.ctx
-	pipe := GlobalRedisClient.client.Pipeline()
+	ctx := GlobalRedisClient.Ctx
+	pipe := GlobalRedisClient.Client.Pipeline()
 
 	// 更新用户的点赞总数
 	userLikesField := "totalLikes"
@@ -91,46 +91,10 @@ func UpdateLikeCounts(userID int64, videoID int64, like bool) error {
 
 	return nil
 }
-func GetVideosLikes(videoIDs []int64) (map[int64]int64, error) {
-	ctx := GlobalRedisClient.ctx
-	pipe := GlobalRedisClient.client.Pipeline()
-
-	futures := make(map[int64]*redis.StringCmd)
-	for _, videoID := range videoIDs {
-		videoKey := fmt.Sprintf("video:%d", videoID)
-		videoLikesField := "totalVideoLikes"
-		futures[videoID] = pipe.HGet(ctx, videoKey, videoLikesField)
-	}
-
-	_, err := pipe.Exec(ctx)
-	if err != nil && err != redis.Nil {
-		return nil, fmt.Errorf("failed to execute pipeline: %v", err)
-	}
-
-	result := make(map[int64]int64)
-	for videoID, future := range futures {
-		err := future.Err()
-		if err == redis.Nil {
-			result[videoID] = 0
-			continue
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to get video likes for video %d: %v", videoID, err)
-		}
-		likesStr, _ := future.Result()
-		likes, err := strconv.ParseInt(likesStr, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse likes for video %d: %v", videoID, err)
-		}
-		result[videoID] = likes
-	}
-
-	return result, nil
-}
 
 func GetUserFavorites(userIDs []int64) (map[int64]int64, error) {
-	ctx := GlobalRedisClient.ctx
-	pipe := GlobalRedisClient.client.Pipeline()
+	ctx := GlobalRedisClient.Ctx
+	pipe := GlobalRedisClient.Client.Pipeline()
 
 	// 创建一个存储未来结果的映射
 	futures := make(map[int64]*redis.StringCmd)
@@ -154,7 +118,7 @@ func GetUserFavorites(userIDs []int64) (map[int64]int64, error) {
 				// 如果用户不存在，则设置键并将值设为0
 				userKey := fmt.Sprintf("user:%d", userID)
 				userLikesField := "totalLikes"
-				if err := GlobalRedisClient.client.HSet(ctx, userKey, userLikesField, "0").Err(); err != nil {
+				if err := GlobalRedisClient.Client.HSet(ctx, userKey, userLikesField, "0").Err(); err != nil {
 					return nil, fmt.Errorf("failed to set user favorites for user %d: %v", userID, err)
 				}
 				continue
@@ -171,8 +135,8 @@ func GetUserFavorites(userIDs []int64) (map[int64]int64, error) {
 	return result, nil
 }
 func GetTotalVideosLikes(videoIDs []int64) (int64, error) {
-	ctx := GlobalRedisClient.ctx
-	pipe := GlobalRedisClient.client.Pipeline()
+	ctx := GlobalRedisClient.Ctx
+	pipe := GlobalRedisClient.Client.Pipeline()
 
 	// 创建一个存储未来结果的切片
 	futures := make([]*redis.StringCmd, len(videoIDs))
@@ -280,7 +244,7 @@ func (r *RedisClient) GetVideoLikeCounts(videoIDs []int64) (map[int64]int64, err
 
 	for _, videoID := range videoIDs {
 		likeKey := fmt.Sprintf("likes:%d", videoID)
-		likeCount, err := r.client.HGet(r.ctx, likeKey, "totalLikes").Int64()
+		likeCount, err := r.Client.HGet(r.Ctx, likeKey, "totalLikes").Int64()
 		if err != nil {
 			if err != redis.Nil { // 如果错误不是由于键不存在造成的，则返回错误
 				return nil, fmt.Errorf("无法获取视频的喜欢（like）数量: %v", err)
@@ -299,7 +263,7 @@ func (r *RedisClient) GetTotalLikeCounts(videoIDs []int64) (int64, error) {
 	// 遍历每个视频ID，并获取其点赞数
 	for _, videoID := range videoIDs {
 		likeKey := fmt.Sprintf("likes:%d", videoID)
-		likeCount, err := r.client.HGet(r.ctx, likeKey, "totalLikes").Int64()
+		likeCount, err := r.Client.HGet(r.Ctx, likeKey, "totalLikes").Int64()
 		if err != nil && err != redis.Nil { // 如果错误不是由于键不存在造成的，则返回错误
 			return 0, fmt.Errorf("无法获取视频的喜欢（like）数量: %v", err)
 		}

@@ -3,26 +3,71 @@ package controller
 import (
 	"net/http"
 
+	"bytedancedemo/service"
 	"github.com/gin-gonic/gin"
 )
 
-// FavoriteAction no practical effect, just check if token is valid
-func FavoriteAction(c *gin.Context) {
-	token := c.Query("token")
-
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 0})
-	} else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-	}
+type FavoriteActionRequest struct {
+	VideoID    int64 `json:"video_id"`
+	ActionType int32 `json:"action_type"`
 }
 
-// FavoriteList all users have same favorite video list
+func FavoriteAction(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
+		return
+	}
+	var req FavoriteActionRequest
+
+	// 尝试将请求数据绑定到我们的请求结构中
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	s := service.FavoriteServiceImpl{}
+	s.StartFavoriteAction()                                                         // 创建 FavoriteServiceImpl 实例
+	resp, err := s.FavoriteAction(userIDValue.(int64), req.VideoID, req.ActionType) // 使用实例调用方法
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
+		return
+	}
+
+	// 如果没有错误，则返回正常响应
+	c.JSON(http.StatusOK, resp)
+}
+
 func FavoriteList(c *gin.Context) {
-	c.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
-			StatusCode: 0,
-		},
-		// VideoList: DemoVideos,
-	})
+	// 从上下文中获取userID
+	userIDValue, exists := c.Get("userID")
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
+		return
+	}
+
+	userID, ok := userIDValue.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID has an incorrect type"})
+		return
+	}
+
+	// 创建服务
+	s := service.FavoriteServiceImpl{}
+	resp, err := s.FavoriteList(userID) // 传递userID给服务层方法
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error: " + err.Error()})
+		return
+	}
+
+	// 检查服务层返回的状态码，如果不为0，则返回错误
+	if resp.StatusCode != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": resp.StatusMsg})
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, resp)
 }

@@ -4,13 +4,12 @@ package api
 import (
 	config2 "bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database" ///重复
 	"bytedancedemo/database/mysql"
+	redis2 "bytedancedemo/database/redis"
 
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/middleware/redis"
 	"bytedancedemo/router"
-	//"bytedancedemo/service"
 
 	"bytedancedemo/utils/log"
 	"github.com/spf13/cobra"
@@ -28,15 +27,13 @@ var (
 		Long:  "抖音极简版APP服务器",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
-			database.Init()
+			mysql.Init()
 			redis.InitRedis()
+			redis2.Init()
 			rabbitmq.InitRabbitMQ()
 			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()
-			//	go service.RunMessageServer()
-			dao.SetDefault(database.DB) ///重复
-			log.InitLogger(mode)        //日志重复
-			mysql.Init()                //重复init
+			log.InitLogger(mode) //日志重复
 			dao.SetDefault(mysql.DB)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
