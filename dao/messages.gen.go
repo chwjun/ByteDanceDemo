@@ -15,6 +15,7 @@ import (
 	"gorm.io/gen/field"
 
 	"gorm.io/plugin/dbresolver"
+
 	"bytedancedemo/model"
 )
 

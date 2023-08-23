@@ -13,7 +13,7 @@ type Comment struct {
 	//Content    string    //评论内容
 	//ActionType int64     //发布评论为1，取消评论为2
 	//CreatedAt  time.Time //评论发布的日期mm-dd
-	//UpdatedAt  time.Time
+	//UpdatedAt  time.Timez
 	model.Comment
 }
 

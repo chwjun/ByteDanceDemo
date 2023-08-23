@@ -14,13 +14,13 @@ const TableNameRelation = "relations"
 
 // Relation mapped from table <relations>
 type Relation struct {
-	ID          int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey;autoIncrement:true;comment:主键" json:"id"`   // 主键
-	CreatedAt   time.Time      `gorm:"column:created_at;type:datetime(3);comment:记录创建时间" json:"created_at"`                     // 记录创建时间
-	UpdatedAt   time.Time      `gorm:"column:updated_at;type:datetime(3);comment:记录更新时间" json:"updated_at"`                     // 记录更新时间
-	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);comment:软删除时间" json:"deleted_at"`                      // 软删除时间
-	UserID      int64          `gorm:"column:user_id;type:bigint(20) unsigned;comment:用户id" json:"user_id"`                     // 用户id
-	FollowingID int64          `gorm:"column:following_id;type:bigint(20) unsigned;comment:user id关注的用户id" json:"following_id"` // user id关注的用户id
-	Followed    int64          `gorm:"column:followed;type:bigint(20);not null;comment:默认0表示未关注，1表示已关注" json:"followed"`        // 默认0表示未关注，1表示已关注
+	ID          int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey;autoIncrement:true;comment:主键" json:"id"`            // 主键
+	CreatedAt   time.Time      `gorm:"column:created_at;type:datetime(3);comment:记录创建时间" json:"created_at"`                              // 记录创建时间
+	UpdatedAt   time.Time      `gorm:"column:updated_at;type:datetime(3);comment:记录更新时间" json:"updated_at"`                              // 记录更新时间
+	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);comment:软删除时间" json:"deleted_at"`                               // 软删除时间
+	UserID      int64          `gorm:"column:user_id;type:bigint(20) unsigned;not null;comment:用户id" json:"user_id"`                     // 用户id
+	FollowingID int64          `gorm:"column:following_id;type:bigint(20) unsigned;not null;comment:user id关注的用户id" json:"following_id"` // user id关注的用户id
+	Followed    int64          `gorm:"column:followed;type:bigint(20);not null;comment:默认0表示未关注，1表示已关注" json:"followed"`                 // 默认0表示未关注，1表示已关注
 }
 
 // TableName Relation's table name
