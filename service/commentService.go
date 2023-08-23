@@ -1,7 +1,7 @@
 package service
 
 import (
-	"bytedancedemo/repository"
+	"bytedancedemo/model"
 )
 
 // CommentService 接口定义
@@ -10,7 +10,7 @@ type CommentService interface {
 	// 给视频模块提供服务
 	GetCommentCnt(videoId int64) (int64, error)
 
-	CommentAction(comment repository.Comment) (Comment, error)
+	CommentAction(comment model.Comment) (Comment, error)
 	DeleteCommentAction(commentId int64) error
 	GetCommentList(videoId int64, userId int64) ([]Comment, error)
 }

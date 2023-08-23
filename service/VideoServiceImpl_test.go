@@ -3,7 +3,7 @@ package service
 import (
 	"bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
 	"testing"
 	"time"
 	// "gorm.io/driver/mysql"
@@ -20,12 +20,12 @@ func TestNewVSIInstance(t *testing.T) {
 	}
 }
 
-// go test -v .\service\VideoServiceImpl_test.go .\service\VideoServiceImpl.go .\service\VideoService.go .\service\UserService.go .\service\UserServiceImpl.go
+// go test -v .\service\VideoServiceImpl_test.go .\service\VideoServiceImpl.go .\service\VideoService.go .\service\userService.go .\service\UserServiceImpl.go
 // 测试Feed接口
 func TestVideoServiceImpl_Feed(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	time1 := time.Date(2023, 8, 19, 18, 07, 46, 0, time.Now().Location())
 	timeNow := time.Now()
 	// 正确的4种情况，错误的有1种（userid不存在）
@@ -79,8 +79,8 @@ func TestVideoServiceImpl_Feed(t *testing.T) {
 }
 func TestVideoServiceImpl_Pbulishlist(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	// 正确的4种情况，错误的有1种（userid不存在）
 	type test struct {
 		name          string
@@ -151,8 +151,8 @@ func BenchmarkNewVSIInstance(b *testing.B) {
 // 基准测试，测试Feed
 func BenchmarkVideoServiceImpl_Feed(b *testing.B) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 
 	vsi := NewVSIInstance()
 	b.ResetTimer()
@@ -164,8 +164,8 @@ func BenchmarkVideoServiceImpl_Feed(b *testing.B) {
 
 func BenchmarkVideoServiceImpl_Pbulishlist(b *testing.B) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 
 	vsi := NewVSIInstance()
 	b.ResetTimer()

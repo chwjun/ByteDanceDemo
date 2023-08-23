@@ -21,7 +21,7 @@ func GetMessageServiceInstance() *MessageServiceImpl {
 	return messageServiceImpl
 }
 
-func (messageService *MessageServiceImpl) SendMessage(userId int64, toUserId int64, actionType int64, content string) error {
+func (messageService *MessageServiceImpl) SendMessage(userId int64, toUserId int64, actionType int32, content string) error {
 	if actionType != 1 {
 		slog.Fatalf("Undefined actionType: %d", actionType)
 		return nil
