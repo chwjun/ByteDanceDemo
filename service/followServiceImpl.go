@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-// FollowServiceImp 该结构体继承FollowService接口。
+// FollowServiceImp 该结构体继承FollowService，MessageService，UserService接口。
 type FollowServiceImp struct {
-	//MessageService
+	MessageService
 	FollowService
 	UserService
 }
@@ -640,7 +640,7 @@ func (followService *FollowServiceImp) BuildFriendUser(userId int64, friendUsers
 		friendUsers[i].Avatar = viper.GetString("settings.oss.avatar")
 
 		// 调用message模块获取聊天记录
-		messageInfo, err := GetLatestMessage(userId, ids[i])
+		messageInfo, err := followService.GetLatestMessage(userId, ids[i])
 
 		//在根据id获取不到最新一条消息时，需要返回对应的id
 		if err != nil {
