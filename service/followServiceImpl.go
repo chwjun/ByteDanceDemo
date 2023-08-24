@@ -399,13 +399,18 @@ func (followService *FollowServiceImp) GetFollowingCnt(userId int64) (int64, err
 		if err2 != nil {
 			log.Println(err2.Error())
 		}
-		redis.UserFollowings.Expire(redis.Ctx, strconv.Itoa(int(userId)), CacheTimeGenerator())
+		if cnt < 100 { // 数据小的场景下 查询耗时短 数据差异明显 缓存需及时更新
+			redis.UserFollowings.Expire(redis.Ctx, strconv.Itoa(int(userId)), time.Duration(5+int(time.Second)*rand.Intn(5)))
+		} else if cnt < 1000 {
+			redis.UserFollowings.Expire(redis.Ctx, strconv.Itoa(int(userId)), time.Duration(int(time.Second)*rand.Intn(5))+time.Minute)
+		} else { // 数据大的场景 查询耗时长 数据变化不明显 可以更长时间更新一次
+			redis.UserFollowings.Expire(redis.Ctx, strconv.Itoa(int(userId)), CacheTimeGenerator())
+		}
 		return cnt, nil
 
 	} else {
 		// 键不存在，获取数据库数据更新至redis，返回数据库所获取数据
 		ids, _, err1 := followDao.GetFollowingsInfo(userId)
-
 		if err1 != nil {
 			log.Println(err1.Error())
 		}
@@ -438,8 +443,13 @@ func (followService *FollowServiceImp) GetFollowerCnt(userId int64) (int64, erro
 		if err2 != nil {
 			log.Println(err2.Error())
 		}
-
-		redis.UserFollowers.Expire(redis.Ctx, strconv.Itoa(int(userId)), CacheTimeGenerator())
+		if cnt < 100 { // 数据小的场景下 查询耗时短 数据差异明显 缓存需及时更新
+			redis.UserFollowers.Expire(redis.Ctx, strconv.Itoa(int(userId)), time.Duration(5+int(time.Second)*rand.Intn(5)))
+		} else if cnt < 1000 {
+			redis.UserFollowers.Expire(redis.Ctx, strconv.Itoa(int(userId)), time.Duration(int(time.Second)*rand.Intn(5))+time.Minute)
+		} else { // 数据大的场景 查询耗时长 数据变化不明显 可以更长时间更新一次
+			redis.UserFollowers.Expire(redis.Ctx, strconv.Itoa(int(userId)), CacheTimeGenerator())
+		}
 		return cnt, nil
 
 	} else {
