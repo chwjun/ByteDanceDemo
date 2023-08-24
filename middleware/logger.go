@@ -12,7 +12,7 @@ func LoggerMiddleware(c *gin.Context) {
 	c.Next()
 	endTime := time.Now()
 	durationTime := endTime.Sub(startTime)
-	zap.L().Info("",
+	zap.L().Info("路由日志",
 		zap.String("Method", c.Request.Method),
 		zap.Int("Status", c.Writer.Status()),
 		zap.Duration("durationTime", durationTime),

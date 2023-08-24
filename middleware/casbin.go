@@ -33,7 +33,7 @@ func CasbinMiddleware(c *gin.Context) {
 		c.Next()
 	} else {
 		c.JSON(http.StatusForbidden, gin.H{
-			"msg": fmt.Sprintf("对不起 %v 没有 <%v-%v> 访问权限，请联系管理员", role, c.Request.URL.Path, c.Request.Method),
+			"msg": fmt.Sprintf("对不起 %v 没有 %v-%v 访问权限，请联系管理员", role, c.Request.URL.Path, c.Request.Method),
 		})
 		c.Abort()
 		return

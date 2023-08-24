@@ -41,7 +41,7 @@ func FavoriteAction(c *gin.Context) {
 
 func FavoriteList(c *gin.Context) {
 	// 从上下文中获取userID
-	userIDValue, exists := c.Get("userID")
+	userIDValue, exists := c.Get("user_id")
 
 	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
