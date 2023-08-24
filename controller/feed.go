@@ -41,7 +41,7 @@ func Feed(c *gin.Context) {
 	// fmt.Println(latest_time)
 	videoservice := service.NewVSIInstance()
 	user_id := int64(0)
-	user_id_temp, exits := c.Get("userID")
+	user_id_temp, exits := c.Get("user_id")
 
 	if !exits {
 		user_id = int64(0)

@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytedancedemo/dao"
-	"bytedancedemo/database/mysql"
 	"bytedancedemo/model"
 	"fmt"
 	"sync"
@@ -56,7 +55,7 @@ func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) 
 func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoServiceImp, user_id int64) ([]ResponseVideo, error) {
 	// 返回的视频流
 	response_video_list := make([]ResponseVideo, len(dao_video_list))
-	for _, video := range dao_video_list {
+	for i, video := range dao_video_list {
 		temp_response_video := ResponseVideo{}
 		var wait_group sync.WaitGroup
 		wait_group.Add(5)
@@ -125,7 +124,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 			wait_group.Done()
 		}(video, &temp_response_video)
 		wait_group.Wait()
-		response_video_list = append(response_video_list, temp_response_video)
+		response_video_list[i] = temp_response_video
 	}
 	return response_video_list, nil
 }
@@ -166,7 +165,7 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 // 这个是video专用的通过时间获取videolist
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
-	dao.SetDefault(mysql.DB)
+	//dao.SetDefault(mysql.DB)
 	// 在这里查询
 	V := dao.Video
 	fmt.Println(V)
