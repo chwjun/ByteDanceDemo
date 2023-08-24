@@ -121,14 +121,3 @@ func TestFollowDao_GetFollowerCnt(t *testing.T) {
 	fmt.Println(followerCount)
 
 }
-
-func TestFollowDao_GetUserName(t *testing.T) {
-	config.Init("../config/settings.yml")
-	mysql.Init()
-	dao.SetDefault(mysql.DB)
-	name, err := followDao.GetUserName(1)
-	if err != nil {
-		log.Default()
-	}
-	fmt.Println(name)
-}

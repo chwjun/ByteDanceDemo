@@ -76,7 +76,6 @@ func (usi *UserServiceImpl) GetUserDetailsById(id int64, curID *int64) (*User, e
 
 	userService := GetUserServiceInstance()
 
-	// TODO 需要关注模块 点赞模块 视频模块的配合 获取剩余数据
 	var wg sync.WaitGroup
 	wg.Add(5)
 	if curID != nil {
@@ -150,4 +149,20 @@ func (usi *UserServiceImpl) GetUserDetailsById(id int64, curID *int64) (*User, e
 
 	wg.Wait()
 	return user, nil
+}
+
+// GetUserName 在user表中根据id查询用户姓名
+func (usi *UserServiceImpl) GetUserName(userId int64) (string, error) {
+	u := dao.User
+
+	var userName string
+	err := u.
+		Where(u.ID.Eq(userId)).
+		Pluck(u.Name, &userName)
+	if err != nil {
+		zap.L().Error("查询用户名出错", zap.Error(err))
+		return "", err
+	}
+
+	return userName, nil
 }

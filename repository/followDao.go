@@ -243,19 +243,3 @@ func (*FollowDao) GetFollowerCnt(userId int64) (int64, error) {
 
 	return followerCount, nil
 }
-
-// GetUserName 在user表中根据id查询用户姓名，放在followDao文件中并不妥当，后续可能废弃
-func (*FollowDao) GetUserName(userId int64) (string, error) {
-	u := dao.User
-
-	var userName string
-	err := u.
-		Where(u.ID.Eq(userId)).
-		Pluck(u.Name, &userName)
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
-
-	return userName, nil
-}

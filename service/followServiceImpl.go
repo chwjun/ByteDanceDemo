@@ -555,7 +555,7 @@ func ImportToRDBFriend(userId int64, ids []int64) {
 
 // BuildUser 根据传入的id列表和空user数组，构建业务所需user数组并返回
 func (followService *FollowServiceImp) BuildUser(userId int64, users []User, ids []int64, buildtype int) error {
-	folowDao := repository.NewFollowDaoInstance()
+	//folowDao := repository.NewFollowDaoInstance()
 
 	// 遍历传入的用户id，组成user结构体
 	for i := 0; i < len(ids); i++ {
@@ -565,7 +565,7 @@ func (followService *FollowServiceImp) BuildUser(userId int64, users []User, ids
 
 		// 用户name赋值
 		var err1 error
-		users[i].Name, err1 = folowDao.GetUserName(ids[i])
+		users[i].Name, err1 = followService.GetUserName(ids[i])
 		if nil != err1 {
 			log.Println(err1)
 			return err1
@@ -603,7 +603,7 @@ func (followService *FollowServiceImp) BuildUser(userId int64, users []User, ids
 // BuildFriendUser 根据传入的id列表和空frienduser数组，构建业务所需frienduser数组并返回
 func (followService *FollowServiceImp) BuildFriendUser(userId int64, friendUsers []FriendUser, ids []int64) error {
 
-	followDao := repository.NewFollowDaoInstance()
+	//followDao := repository.NewFollowDaoInstance()
 
 	// 遍历传入的好友id，组装好友user结构体
 	for i := 0; i < len(ids); i++ {
@@ -613,7 +613,7 @@ func (followService *FollowServiceImp) BuildFriendUser(userId int64, friendUsers
 
 		// 好友name赋值
 		var err1 error
-		friendUsers[i].Name, err1 = followDao.GetUserName(ids[i])
+		friendUsers[i].Name, err1 = followService.GetUserName(ids[i])
 		if nil != err1 {
 			log.Println(err1)
 			return err1

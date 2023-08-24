@@ -25,4 +25,6 @@ type UserService interface {
 	GetUserBasicByPassword(username string, password string) (*model.User, bool)
 	// GetUserDetailsById 根据用户ID查询获取详细信息
 	GetUserDetailsById(id int64, curID *int64) (*User, error)
+	// GetUserName 根据用户ID查询用户名
+	GetUserName(userId int64) (string, error)
 }
