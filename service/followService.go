@@ -2,9 +2,9 @@ package service
 
 type FriendUser struct {
 	User
-	Avatar  string `json:"avatar"`
-	Message string `json:"message,omitempty"`
-	MsgType int64  `json:"msg_type"`
+	Avatar     string `json:"avatar"`
+	MsgContent string `json:"message,omitempty"`
+	MsgType    int32  `json:"msg_type"`
 }
 
 type FollowService interface {

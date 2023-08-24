@@ -1,6 +1,9 @@
 package service
 
 import (
+	"bytedancedemo/middleware/rabbitmq"
+	"bytedancedemo/middleware/redis"
+	"bytedancedemo/repository"
 	"fmt"
 	"log"
 	"math/rand"
@@ -8,10 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"bytedancedemo/config"
-	"bytedancedemo/middleware/rabbitmq"
-	"bytedancedemo/middleware/redis"
-	"bytedancedemo/repository"
+	"github.com/spf13/viper"
 )
 
 // FollowServiceImp 该结构体继承FollowService接口。
@@ -593,7 +593,6 @@ func (followService *FollowServiceImp) BuildUser(userId int64, users []User, ids
 // BuildFriendUser 根据传入的id列表和空frienduser数组，构建业务所需frienduser数组并返回
 func (followService *FollowServiceImp) BuildFriendUser(userId int64, friendUsers []FriendUser, ids []int64) error {
 
-	//	msi := messageServiceImpl    //与message交互 先注释掉，后面打开
 	followDao := repository.NewFollowDaoInstance()
 
 	// 遍历传入的好友id，组装好友user结构体
@@ -628,19 +627,19 @@ func (followService *FollowServiceImp) BuildFriendUser(userId int64, friendUsers
 
 		// 好友其他属性赋值
 		friendUsers[i].IsFollow = true
-		friendUsers[i].Avatar = config.CUSTOM_DOMAIN + config.OSS_USER_AVATAR_DIR
+		friendUsers[i].Avatar = viper.GetString("settings.oss.avatar")
 
-		// 	// 调用message模块获取聊天记录
-		// 	messageInfo, err := msi.LatestMessage(userId, ids[i])
+		// 调用message模块获取聊天记录
+		messageInfo, err := GetLatestMessage(userId, ids[i])
 
-		// 	//在根据id获取不到最新一条消息时，需要返回对应的id
-		// 	if err != nil {
+		//在根据id获取不到最新一条消息时，需要返回对应的id
+		if err != nil {
 
-		// 		continue
-		// 	}
+			continue
+		}
 
-		// 	friendUsers[i].Message = messageInfo.message
-		// 	friendUsers[i].MsgType = messageInfo.msgType
+		friendUsers[i].MsgContent = messageInfo.Content
+		friendUsers[i].MsgType = messageInfo.ActionType
 	}
 
 	// 将空数组内属性构建完成即可，不用特意返回数组
