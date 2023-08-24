@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytedancedemo/dao"
-	"bytedancedemo/database/mysql"
 	"bytedancedemo/model"
 	"fmt"
 	"sync"
@@ -166,7 +165,7 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 // 这个是video专用的通过时间获取videolist
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
-	dao.SetDefault(mysql.DB)
+	// dao.SetDefault(mysql.DB)
 	// 在这里查询
 	V := dao.Video
 	fmt.Println(V)

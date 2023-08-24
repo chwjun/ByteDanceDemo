@@ -12,10 +12,11 @@ import (
 	"bytedancedemo/router"
 
 	"bytedancedemo/utils/log"
-	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	"os"
 	"os/signal"
+
+	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var (
@@ -33,6 +34,7 @@ var (
 			rabbitmq.InitRabbitMQ()
 			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()
+			rabbitmq.InitVideoRabbitMQ()
 			log.InitLogger(mode) //日志重复
 			dao.SetDefault(mysql.DB)
 		},
