@@ -1,10 +1,8 @@
 package service
 
 import (
-	"fmt"
-	"log"
-
 	"bytedancedemo/utils"
+	"fmt"
 
 	"bytedancedemo/dao"
 )
@@ -37,7 +35,7 @@ func (s *FavoriteServiceImpl) FavoriteList(userID int64) (FavoriteListResponse, 
 
 func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Video, error) {
 	videoIDs, err := GetLikedVideoIDs(userID)
-	log.Printf("videoIDs: %+v", videoIDs)
+	//log.Printf("videoIDs: %+v", videoIDs)
 	if err != nil {
 		return nil, fmt.Errorf("获取点赞视频ID失败: %v", err)
 	}
@@ -101,12 +99,12 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 			IsFavorite:    true,
 			Title:         videoDetail.Title,
 		}
-		log.Printf("video: %+v", video)
+		//log.Printf("video: %+v", video)
 		videos = append(videos, video)
-		log.Printf("videos: %+v", videos) /**/
+		//log.Printf("videos: %+v", videos) /**/
 
 	}
-	log.Printf("运行结束")
+	//log.Printf("运行结束")
 	return videos, nil
 }
 

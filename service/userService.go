@@ -19,12 +19,16 @@ type User struct {
 }
 
 type UserService interface {
+
 	// InsertUser 插入用户基础信息
 	InsertUser(userBasic *model.User) (*model.User, bool)
+
 	// GetUserBasicByPassword 根据用户名和密码查询基础信息
 	GetUserBasicByPassword(username string, password string) (*model.User, bool)
+
 	// GetUserDetailsById 根据用户ID查询获取详细信息
 	GetUserDetailsById(id int64, curID *int64) (*User, error)
+
 	// GetUserName 根据用户ID查询用户名
 	GetUserName(userId int64) (string, error)
 }

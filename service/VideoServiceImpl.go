@@ -4,6 +4,7 @@ import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
 	"fmt"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 )
@@ -33,18 +34,18 @@ func NewVSIInstance() *VideoServiceImp {
 }
 
 func (videoService *VideoServiceImp) Test() {
-	fmt.Println("获取接口成功")
+	zap.L().Debug("Feed获取服务层接口成功")
 }
 
 func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) ([]ResponseVideo, time.Time, error) {
 	// 根据最新时间查找数据库获取视频的信息
 	dao_video_list, err := GetVideosByLatestTime(latest_time)
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
-		fmt.Println("Feed")
+		//fmt.Println("Feed")
 		return nil, time.Time{}, err
 	}
 	// 获取剩余信息，构造返回的结构体
-	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
+	response_video_list, err := makeResponseVideo(dao_video_list, videoService, user_id)
 	if err != nil {
 		return nil, dao_video_list[len(dao_video_list)-1].CreatedAt, err
 	}
@@ -168,7 +169,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	//dao.SetDefault(mysql.DB)
 	// 在这里查询
 	V := dao.Video
-	fmt.Println(V)
+	//fmt.Println(V)
 	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(size).Find()
 	// fmt.Println(latest_time)
 	// fmt.Println(len(result))

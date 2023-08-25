@@ -2,23 +2,12 @@
 package config
 
 import (
-	"fmt"
-
-	"github.com/gookit/slog"
 	"github.com/spf13/viper"
 	"log"
 )
 
 const OSS_USER_AVATAR_DIR = "your_avatar_directory_here"
 const GO_STARTER_TIME = "2006-01-02 15:04:05"
-const MQ_URL = "amqp://guest:guest@43.140.203.85:5672/"
-
-const (
-	RedisAddr = "43.140.203.85:6379"
-	RedisPwd  = ""
-)
-
-//const ExpireTime = 100
 
 // 视频模块相关配置
 const (
@@ -39,8 +28,7 @@ func Init(configFilePath string) {
 	// configFilePath = "./settings.yml"
 	viper.SetConfigFile(configFilePath)
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("出问题了")
-		slog.Errorf("加载配置信息失败 %v", err)
+		log.Fatalf("加载配置信息失败 %v", err)
 
 	} else {
 		log.Println("加载配置信息成功！")

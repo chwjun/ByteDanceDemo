@@ -18,7 +18,7 @@ type RedisClient struct {
 
 var GlobalRedisClient *RedisClient
 
-func init() {
+func Init() {
 	// 你的 Redis 配置
 	addr := "43.140.203.85:6388"
 	password := "sample_douyin"

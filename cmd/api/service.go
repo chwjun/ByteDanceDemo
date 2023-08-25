@@ -6,6 +6,7 @@ import (
 	"bytedancedemo/dao"
 	"bytedancedemo/database/mysql"
 	redis2 "bytedancedemo/database/redis"
+	redis3 "bytedancedemo/utils"
 
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/middleware/redis"
@@ -27,13 +28,14 @@ var (
 		Long:  "抖音极简版APP服务器",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config2.Init(config)
+			log.InitLogger(mode) //日志重复
 			mysql.Init()
 			redis.InitRedis()
 			redis2.Init()
+			redis3.Init()
 			rabbitmq.InitRabbitMQ()
 			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()
-			log.InitLogger(mode) //日志重复
 			dao.SetDefault(mysql.DB)
 		},
 		Run: func(cmd *cobra.Command, args []string) {

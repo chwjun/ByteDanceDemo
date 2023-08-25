@@ -53,7 +53,7 @@ func Feed(c *gin.Context) {
 		user_id = int64(0)
 	}
 
-	fmt.Println(user_id)
+	//fmt.Println(user_id)
 	//fmt.Println(videoservice)
 	videoservice.Test()
 	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
