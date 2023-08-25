@@ -60,6 +60,7 @@ func (messageService *MessageServiceImpl) GetLatestMessage(userId int64, selecte
 		Or(m.SenderID.Eq(selectedUserId), m.ReceiverID.Eq(userId)).
 		Order(m.CreatedAt.Desc()).
 		First()
+
 	if err != nil {
 		slog.Fatalf("Fetch latest message failed! %v", err)
 	}

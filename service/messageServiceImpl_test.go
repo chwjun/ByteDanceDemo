@@ -73,3 +73,5 @@ func TestMessageServiceImpl_GetLatestMessage(t *testing.T) {
 	}
 	log.Println(*msg)
 }
+
+//
