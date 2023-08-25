@@ -3,7 +3,9 @@ package rabbitmq
 import (
 	"fmt"
 	"log"
+	"strings"
 
+	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -12,24 +14,28 @@ type VideoMQ struct {
 	QueueName string
 	Exchange  string
 	Key       string
+	CorrID    string
+	ReplyName string
 }
 
 var SimpleVideoFeedMq *VideoMQ
 var SimpleVideoPublishListMq *VideoMQ
 
 // 新建“视频”消息队列
-func newVideoRabbitMQ(queueName string, exchangeName string, key string) *VideoMQ {
+func newVideoRabbitMQ(queueName string, exchangeName string, key string, replyto string, corrid string) *VideoMQ {
 	videoMQ := &VideoMQ{
 		RabbitMQ:  *BaseRmq,
 		QueueName: queueName,
 		Exchange:  exchangeName,
 		Key:       key,
+		ReplyName: replyto,
+		CorrID:    corrid,
 	}
 	return videoMQ
 }
 
-// PublishSimpleVideo simple模式下关注生产者
-func (r *VideoMQ) PublishSimpleVideo(message string) error {
+// PublishSimpleVideo simple模式下视频请求生产者
+func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 	//1.申请队列，如果队列不存在会自动创建，存在则跳过创建
 	_, err := r.channel.QueueDeclare(
 		r.QueueName,
@@ -49,7 +55,8 @@ func (r *VideoMQ) PublishSimpleVideo(message string) error {
 		return err
 	}
 	//调用channel 发送消息到队列中
-	err = r.channel.Publish(
+	err = r.channel.PublishWithContext(
+		c,
 		r.Exchange,
 		r.QueueName,
 		//如果为true，根据自身exchange类型和routekey规则无法找到符合条件的队列会把消息返还给发送者
@@ -57,11 +64,33 @@ func (r *VideoMQ) PublishSimpleVideo(message string) error {
 		//如果为true，当exchange发送消息到队列后发现队列上没有消费者，则会把消息返还给发送者
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(message),
+			ContentType:   "text/plain",
+			CorrelationId: r.CorrID,
+			ReplyTo:       r.ReplyName,
+			Body:          []byte(message),
 		})
 	if err != nil {
 		return err
+	}
+	// 处理回调,判断消息是否处理
+	content,err := r.channel.Consume(
+		r.QueueName,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	for msg := range content {
+		if msg.CorrelationId == r.CorrID && string(msg.Body) == "Finish" {
+			// false表示仅确认当前消息
+			msg.Ack(false)
+			break
+		}
 	}
 	return nil
 }
@@ -126,48 +155,57 @@ func (r *VideoMQ) ConsumeSimpleVideo() {
 	<-forever
 }
 
-// consumerVideoFeed 添加Feed的消费
+// consumerVideoFeed 添加Feed的消费，并且发送给生产者完成消息
 func (r *VideoMQ) consumerVideoFeed(msgs <-chan amqp.Delivery) {
-
-}
-
-// consumerVideoPublishList 添加publislist 的消费
-func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
 	for msg := range msgs {
-		followDao := repository.NewFollowDaoInstance()
 		// 解析参数
 		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
-		log.Println("添加关注关系消费者获得 params:", params)
-		userId, _ := strconv.ParseInt(params[0], 10, 64)
-		targetId, _ := strconv.ParseInt(params[1], 10, 64)
-		insertOrUpdate := params[2]
-		// 数据库操作，最大重试次数 cnt
-		cnt := 10
-		for i := 0; i < cnt; i++ {
-			succeed := true
-			var err error
-			if insertOrUpdate == config.DB_INSERT {
-				_, err = followDao.InsertFollowRelation(userId, targetId)
-			} else if insertOrUpdate == config.DB_UPDATE {
-				_, err = followDao.UpdateFollowRelation(userId, targetId, int8(1))
-			}
-			if err != nil {
-				succeed = false
-			}
-			if succeed {
-				break
-			}
-		}
+		log.Println("添加视频消费者获得 params:", params)
+		// 回调队列
+		r.channel.Publish(
+			r.Exchange,
+			r.Key,
+			false,
+			false,
+			amqp.Publishing{
+				ContentType:   "text/plain",
+				CorrelationId: r.CorrID,
+				ReplyTo:       r.ReplyName,
+				Body:          []byte("Finish"),
+			},
+		)
+	}
+}
+
+// consumerVideoPublishList 添加publislist 的消费，并且发送给生产者完成消息
+func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
+	for msg := range msgs {
+		// 解析参数
+		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
+		log.Println("添加视频消费者获得 params:", params)
+		// 回调队列
+		r.channel.Publish(
+			r.Exchange,
+			r.Key,
+			false,
+			false,
+			amqp.Publishing{
+				ContentType:   "text/plain",
+				CorrelationId: r.CorrID,
+				ReplyTo:       r.ReplyName,
+				Body:          []byte("Finish"),
+			},
+		)
 	}
 }
 
 // NewSimpleVideoRabbitMQ 新建简单模式的消息队列（生产者，消息队列，一个消费者）
-func NewSimpleVideoRabbitMQ(queueName string) *VideoMQ {
-	return newVideoRabbitMQ(queueName, "", "")
+func NewSimpleVideoRabbitMQ(queueName string, replyto string, corrid string) *VideoMQ {
+	return newVideoRabbitMQ(queueName, "", "", replyto, corrid)
 }
 func InitVideoRabbitMQ() {
-	SimpleVideoFeedMq = NewSimpleVideoRabbitMQ("follow_add")
-	SimpleVideoPublishListMq = NewSimpleVideoRabbitMQ("follow_del")
+	SimpleVideoFeedMq = NewSimpleVideoRabbitMQ("feed", "feed", "feed")
+	SimpleVideoPublishListMq = NewSimpleVideoRabbitMQ("publishlist", "publishlist", "publishlist")
 	// 开启 go routine 启动消费者
 	go SimpleVideoFeedMq.ConsumeSimpleVideo()
 	go SimpleVideoPublishListMq.ConsumeSimpleVideo()

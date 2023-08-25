@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/service"
 	"fmt"
 	"net/http"
@@ -53,9 +54,19 @@ func Feed(c *gin.Context) {
 		user_id = int64(0)
 	}
 
-	fmt.Println(user_id)
+	// fmt.Println(user_id)
 	//fmt.Println(videoservice)
-	videoservice.Test()
+	// videoservice.Test()
+
+	feedMQ := rabbitmq.SimpleVideoFeedMq
+	err := feedMQ.PublishSimpleVideo("feed",c)
+	if err != nil{
+		c.JSON(http.StatusOK, FeedResponse{
+			Response:  Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
+		})
+		return
+	}
+
 	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {

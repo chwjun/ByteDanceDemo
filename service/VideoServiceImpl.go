@@ -163,6 +163,17 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 }
 
+// 数据库操作
+func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
+	V := dao.Video
+	// fmt.Println(V)
+	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
+	if err != nil || result == nil || len(result) == 0 {
+		return nil, err
+	}
+	return result, err
+}
+
 // 这个是video专用的通过时间获取videolist
 func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	// dao.SetDefault(mysql.DB)
@@ -175,17 +186,6 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 	if err != nil {
 		fmt.Println("查询最新时间的videos出错了")
 		result = nil
-		return nil, err
-	}
-	return result, err
-}
-
-// 数据库操作
-func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
-	V := dao.Video
-	// fmt.Println(V)
-	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
-	if err != nil || result == nil || len(result) == 0 {
 		return nil, err
 	}
 	return result, err
