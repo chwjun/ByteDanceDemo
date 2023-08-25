@@ -36,6 +36,7 @@ func newVideoRabbitMQ(queueName string, exchangeName string, key string, replyto
 
 // PublishSimpleVideo simple模式下视频请求生产者
 func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
+	fmt.Println("video生产")
 	//1.申请队列，如果队列不存在会自动创建，存在则跳过创建
 	_, err := r.channel.QueueDeclare(
 		r.QueueName,
@@ -55,8 +56,7 @@ func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 		return err
 	}
 	//调用channel 发送消息到队列中
-	err = r.channel.PublishWithContext(
-		c,
+	err = r.channel.Publish(
 		r.Exchange,
 		r.QueueName,
 		//如果为true，根据自身exchange类型和routekey规则无法找到符合条件的队列会把消息返还给发送者
@@ -72,8 +72,9 @@ func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("处理回调")
 	// 处理回调,判断消息是否处理
-	content,err := r.channel.Consume(
+	content, err := r.channel.Consume(
 		r.QueueName,
 		"",
 		false,
@@ -83,20 +84,24 @@ func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 		nil,
 	)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	for msg := range content {
+		fmt.Println("msg来了")
 		if msg.CorrelationId == r.CorrID && string(msg.Body) == "Finish" {
 			// false表示仅确认当前消息
 			msg.Ack(false)
 			break
 		}
 	}
+	fmt.Println("回调处理完毕")
 	return nil
 }
 
 // ConsumeSimpleVideo simple模式下消费者 video模块
 func (r *VideoMQ) ConsumeSimpleVideo() {
+
 	//1.申请队列，如果队列不存在会自动创建，存在则跳过创建
 	q, err := r.channel.QueueDeclare(
 		r.QueueName,
@@ -145,9 +150,9 @@ func (r *VideoMQ) ConsumeSimpleVideo() {
 
 	log.Println("q.Name", q.Name)
 	switch q.Name {
-	case "video_feed":
+	case "feed":
 		go r.consumerVideoFeed(msgs)
-	case "video_publish_list":
+	case "publishlist":
 		go r.consumerVideoPublishList(msgs)
 	}
 
@@ -158,13 +163,15 @@ func (r *VideoMQ) ConsumeSimpleVideo() {
 // consumerVideoFeed 添加Feed的消费，并且发送给生产者完成消息
 func (r *VideoMQ) consumerVideoFeed(msgs <-chan amqp.Delivery) {
 	for msg := range msgs {
+		fmt.Println("开始消费")
 		// 解析参数
 		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
 		log.Println("添加视频消费者获得 params:", params)
+		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", r.CorrID)
 		// 回调队列
-		r.channel.Publish(
+		err := r.channel.Publish(
 			r.Exchange,
-			r.Key,
+			r.QueueName,
 			false,
 			false,
 			amqp.Publishing{
@@ -174,6 +181,10 @@ func (r *VideoMQ) consumerVideoFeed(msgs <-chan amqp.Delivery) {
 				Body:          []byte("Finish"),
 			},
 		)
+		if err != nil {
+			log.Println("消费后回调出错：", err)
+		}
+		fmt.Println("回调发送完毕")
 	}
 }
 
