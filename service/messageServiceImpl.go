@@ -42,7 +42,7 @@ func (messageService *MessageServiceImpl) SendMessage(userId int64, toUserId int
 	return result
 }
 
-func GetChatHistory(userId int64, toUserId int64, lastTime time.Time) ([]*model.Message, error) {
+func (messageService *MessageServiceImpl) GetChatHistory(userId int64, toUserId int64, lastTime time.Time) ([]*model.Message, error) {
 	m := dao.Message
 	msg, err := m.Where(m.CreatedAt.Gt(lastTime), m.CreatedAt.Lt(time.Now())).
 		Where(m.SenderID.Eq(userId), m.ReceiverID.Eq(toUserId)).Or(m.SenderID.Eq(toUserId), m.ReceiverID.Eq(userId)).
@@ -54,7 +54,7 @@ func GetChatHistory(userId int64, toUserId int64, lastTime time.Time) ([]*model.
 	return msg, nil
 }
 
-func GetLatestMessage(userId int64, selectedUserId int64) (*model.Message, error) {
+func (messageService *MessageServiceImpl) GetLatestMessage(userId int64, selectedUserId int64) (*model.Message, error) {
 	m := dao.Message
 	msg, err := m.Where(m.SenderID.Eq(userId), m.ReceiverID.Eq(selectedUserId)).
 		Or(m.SenderID.Eq(selectedUserId), m.ReceiverID.Eq(userId)).
