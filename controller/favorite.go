@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
 	"bytedancedemo/service"
 	"github.com/gin-gonic/gin"
@@ -13,19 +14,28 @@ type FavoriteActionRequest struct {
 }
 
 func FavoriteAction(c *gin.Context) {
-	userIDValue, exists := c.Get("userID")
+	userIDValue, exists := c.Get("user_id")
 
 	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found in context"})
 		return
 	}
-	var req FavoriteActionRequest
-
-	// 尝试将请求数据绑定到我们的请求结构中
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "请求参数异常", "data": err})
 		return
 	}
+	actionType64, err := strconv.ParseInt(c.Query("action_type"), 10, 32)
+	actionType := int32(actionType64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "请求参数异常", "data": err})
+		return
+	}
+	req := FavoriteActionRequest{
+		VideoID:    videoId,
+		ActionType: actionType,
+	}
+	//zap.L().Debug("点赞请求参数", zap.Any("req", req))
 
 	s := service.FavoriteServiceImpl{}
 	s.StartFavoriteAction()                                                         // 创建 FavoriteServiceImpl 实例
