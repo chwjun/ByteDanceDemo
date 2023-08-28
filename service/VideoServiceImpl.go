@@ -3,10 +3,14 @@ package service
 import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
+	"bytedancedemo/oss"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"sync"
 	"time"
+
+	"github.com/rs/xid"
 )
 
 type VideoServiceImp struct {
@@ -14,6 +18,8 @@ type VideoServiceImp struct {
 	CommentService
 	FavoriteService
 }
+
+const Video_list_size = 10
 
 var (
 	size             = 8
@@ -181,8 +187,6 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 }
 
-const Video_list_size = 10
-
 func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
 	V := dao.Video
 	// fmt.Println(V)
@@ -208,4 +212,34 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 		return nil, err
 	}
 	return result, err
+}
+
+// 上传视频接口
+func (videoService *VideoServiceImp) Action(data *multipart.FileHeader, title string, userID int64) error {
+	// 生成唯一文件名
+	videoName := xid.New().String()
+	err := UploadVideoToOSS(data, videoName)
+	if err != nil {
+		log.Println("Upload Video ERROR : ", err)
+		return err
+	}
+	err = InsertVideo(videoName, userID, title)
+	return nil
+}
+
+// 视频上传到oss
+func UploadVideoToOSS(data *multipart.FileHeader, videoname string) error {
+	file, err := data.Open()
+	if err != nil {
+		log.Println("Open file failed")
+		return err
+	}
+	defer file.Close()
+
+	err = oss.Bucket.PutObject(oss.URLPre+".mp4", file)
+	if err != nil {
+		log.Println("Put Object ERROR : ", err)
+		return err
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytedancedemo/model"
+	"mime/multipart"
 	"time"
 )
 
@@ -28,4 +29,6 @@ type VideoService interface {
 	GetVideoCountByAuthorID(authorId int64) (int64, error)
 	// 测试接口是否获取成功
 	Test()
+	// 视频上传接口
+	Action(data *multipart.FileHeader, title string, userID int64) error
 }

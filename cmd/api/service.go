@@ -11,6 +11,7 @@ import (
 	"bytedancedemo/middleware/redis"
 	"bytedancedemo/router"
 
+	"bytedancedemo/oss"
 	"bytedancedemo/utils/log"
 	"os"
 	"os/signal"
@@ -37,6 +38,7 @@ var (
 			rabbitmq.InitVideoRabbitMQ()
 			log.InitLogger(mode) //日志重复
 			dao.SetDefault(mysql.DB)
+			oss.Init()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			run()

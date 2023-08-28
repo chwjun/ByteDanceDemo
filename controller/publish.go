@@ -3,9 +3,7 @@ package controller
 import (
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/service"
-	"fmt"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,12 +15,6 @@ type VideoListResponse struct {
 
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
-	token := c.PostForm("token")
-
-	if _, exist := usersLoginInfo[token]; !exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-		return
-	}
 
 	data, err := c.FormFile("data")
 	if err != nil {
@@ -32,11 +24,22 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
+	// 获取用户id
+	user_id := int64(0)
+	user_id_temp, exits := c.Get("user_id")
 
-	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token]
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
-	saveFile := filepath.Join("./public/", finalName)
+	if !exits {
+		user_id = int64(0)
+	}
+	switch user_id_temp.(type) {
+	case int64:
+		user_id = user_id_temp.(int64)
+	default:
+		user_id = int64(0)
+	}
+	title := c.PostForm("title")
+	videoservice := service.NewVSIInstance()
+	videoservice.Action(data, title, user_id)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
