@@ -17,6 +17,6 @@ func LoggerMiddleware(c *gin.Context) {
 		zap.Int("Status", c.Writer.Status()),
 		zap.Duration("durationTime", durationTime),
 		zap.String("IP", c.ClientIP()),
-		zap.String("URI", c.Request.RequestURI),
+		zap.String("URL", c.Request.RequestURI),
 	)
 }

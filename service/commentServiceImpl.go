@@ -2,12 +2,13 @@ package service
 
 import (
 	"bytedancedemo/config"
+	"bytedancedemo/database/redis"
 	"bytedancedemo/middleware/rabbitmq"
-	"bytedancedemo/middleware/redis"
 	"bytedancedemo/model"
 	"bytedancedemo/repository"
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"log"
 	"math/rand"
 	"sort"
@@ -73,7 +74,7 @@ func (commentService *CommentServiceImpl) DeleteCommentAction(commentId int64) e
 	commentIdToStr := strconv.FormatInt(commentId, 10)
 	n, err := redis.RdbCVid.Exists(redis.Ctx, commentIdToStr).Result()
 	if err != nil {
-		log.Println(err)
+		zap.L().Error("redis查找评论出错", zap.Error(err))
 	}
 	// 删除评论的消息队列
 	commentDelMQ := rabbitmq.SimpleCommentDelMQ

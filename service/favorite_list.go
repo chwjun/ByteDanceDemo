@@ -3,6 +3,7 @@ package service
 import (
 	"bytedancedemo/utils"
 	"fmt"
+	"go.uber.org/zap"
 
 	"bytedancedemo/dao"
 )
@@ -71,7 +72,7 @@ func (s *FavoriteServiceImpl) GetFavoriteVideoInfoByUserID(userID int64) ([]*Vid
 	for _, author := range authors {
 		authorDetails[author.Id] = *author
 	}
-
+	zap.L().Info("", zap.Any("videoDetails", videoDetails))
 	var videos []*Video
 	for i, videoID := range videoIDs {
 		videoDetail := videoDetails[i]

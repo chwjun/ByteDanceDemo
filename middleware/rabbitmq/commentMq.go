@@ -4,6 +4,7 @@ import (
 	"bytedancedemo/repository"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 	"log"
 	"strconv"
 )
@@ -36,7 +37,7 @@ func (r *CommentMQ) PublishSimple(message string) error {
 		nil,
 	)
 	if err != nil {
-		log.Println(err)
+		zap.L().Error("评论删除消息队列", zap.Error(err))
 		return err
 	}
 	//调用channel 发送消息到队列中
