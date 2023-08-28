@@ -1,34 +1,31 @@
 settings:
   application:
-    rateLimit: 50            # 请求限流阈值
+    rateLimit: 50
   mysql:
-    host:
-    port:
-    schema:
-    username:
-    password:
-    logLevel:
+    host: 43.140.203.85
+    port: 3306
+    schema: sample_douyin
+    username: sample_douyin
+    password: sample_douyin
+    logLevel: 1
   jwt:
-    secretKey: 123456        # jwt加密私钥
-    expirationTime: 24       # token过期时间 （小时）
-  oss:
-    avatar:                  # 头像
-    backgroundImage:         # 背景图
-    signature:               # 个性签名
+    secretKey: youngalone
+    expirationTime: 24
   redis:
-    addr: 127.0.0.1:6379     # redis url
-    password:                # redis密码
-    expirationTime: 5        # redis键值过期时间
+    host: 43.140.203.85
+    port: 6388
+    password: sample_douyin
+    expirationTime: 5
   rabbitMQ:
-    host:                    # rabbitMQ主机
-    port:                    # rabbitMQ端口号
-    username:                # rabbitMQ用户名
-    password:                # rabbitMQ密码
+    host: 43.140.203.85
+    port: 5672
+    username: guest
+    password: guest
   log:
-    path:                    # 日志文件存放路径
-    level:                   # 日志等级
-    maxSize:                 # 日志轮转 单个文件最大空间 MB
-    maxAge:                  # 日志文件保留时间 天
-    maxBackups:              # 日志文件保存最大数量 0表示全部保存
-    compress:                # 日志文件是否压缩
-    mode:                    # 运行模式 控制日志输出等 debug release test
+    path: ./tmp/log.txt
+    level: -1
+    maxSize: 64
+    maxAge: 7
+    maxBackups: 0
+    compress: false
+    mode: debug
