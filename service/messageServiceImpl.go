@@ -3,6 +3,7 @@ package service
 import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
+	"errors"
 	"github.com/gookit/slog"
 	"time"
 )
@@ -59,10 +60,12 @@ func (messageService *MessageServiceImpl) GetLatestMessage(userId int64, selecte
 	msg, err := m.Where(m.SenderID.Eq(userId), m.ReceiverID.Eq(selectedUserId)).
 		Or(m.SenderID.Eq(selectedUserId), m.ReceiverID.Eq(userId)).
 		Order(m.CreatedAt.Desc()).
-		First()
-
+		Find()
 	if err != nil {
 		slog.Fatalf("Fetch latest message failed! %v", err)
 	}
-	return msg, nil
+	if len(msg) == 0 {
+		return nil, errors.New("没有消息")
+	}
+	return msg[0], nil
 }

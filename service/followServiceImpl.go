@@ -1,8 +1,8 @@
 package service
 
 import (
+	"bytedancedemo/database/redis"
 	"bytedancedemo/middleware/rabbitmq"
-	"bytedancedemo/middleware/redis"
 	"bytedancedemo/repository"
 	"fmt"
 	"log"
@@ -53,7 +53,8 @@ func NewFSIInstance() *FollowServiceImp {
 	followServiceOnce.Do(
 		func() {
 			followServiceImp = &FollowServiceImp{
-				UserService: &UserServiceImpl{},
+				UserService:    &UserServiceImpl{},
+				MessageService: &MessageServiceImpl{},
 			}
 		})
 	return followServiceImp
@@ -601,10 +602,10 @@ func (followService *FollowServiceImp) BuildUser(userId int64, users []User, ids
 }
 
 // BuildFriendUser 根据传入的id列表和空frienduser数组，构建业务所需frienduser数组并返回
-func (followService *FollowServiceImp) BuildFriendUser(userId int64, friendUsers []FriendUser, ids []int64) error {
+func (fs *FollowServiceImp) BuildFriendUser(userId int64, friendUsers []FriendUser, ids []int64) error {
 
 	//followDao := repository.NewFollowDaoInstance()
-
+	followService := NewFSIInstance()
 	// 遍历传入的好友id，组装好友user结构体
 	for i := 0; i < len(ids); i++ {
 
