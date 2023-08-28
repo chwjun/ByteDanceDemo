@@ -27,8 +27,11 @@ func Setup() {
 		_, _ = e.AddPolicy("common_user", "/douyin/favorite/action/", "POST")
 		_, _ = e.AddPolicy("common_user", "/douyin/favorite/list/", "GET")
 		_, _ = e.AddPolicy("common_user", "/douyin/comment/action/", "POST")
+		_, _ = e.AddPolicy("common_user", "/douyin/comment/list/", "GET")
 		_, _ = e.AddPolicy("common_user", "/douyin/relation/action/", "POST")
 		_, _ = e.AddPolicy("common_user", "/douyin/relation/follow/list/", "GET")
+		_, _ = e.AddPolicy("common_user", "/douyin/relation/follower/list/", "GET")
+		_, _ = e.AddPolicy("common_user", "/douyin/relation/friend/list/", "GET")
 		_, _ = e.AddPolicy("common_user", "/douyin/message/chat/", "GET")
 		_, _ = e.AddPolicy("common_user", "/douyin/message/action/", "POST")
 	}
