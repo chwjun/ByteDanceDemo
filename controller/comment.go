@@ -25,7 +25,7 @@ type CommentActionResponse struct {
 func CommentAction(c *gin.Context) {
 	// 获取userId
 	log.Println("Controller_Comment_Action: run") //函数已运行
-	userId := c.GetInt64("userId")
+	userId := c.GetInt64("user_Id")
 	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, CommentActionResponse{
@@ -104,7 +104,7 @@ func CommentAction(c *gin.Context) {
 
 // CommentList all videos have same demo comment list
 func CommentList(c *gin.Context) {
-	userId := c.GetInt64("userId")
+	userId := c.GetInt64("user_Id")
 	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, CommentListResponse{

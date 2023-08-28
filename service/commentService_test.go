@@ -3,7 +3,7 @@ package service
 import (
 	"bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
 	"bytedancedemo/middleware/rabbitmq"
 	"fmt"
 
@@ -25,7 +25,7 @@ import (
 // Package service @Author: youngalone [2023/8/18]
 
 // 测试单例模式
-func TestGetUserServiceInstance(t *testing.T) {
+func TestCommentServiceInstance(t *testing.T) {
 	usi1 := GetCommentServiceInstance()
 	usi2 := GetCommentServiceInstance()
 	if usi1 != usi2 {
@@ -35,8 +35,8 @@ func TestGetUserServiceInstance(t *testing.T) {
 
 func TestCommentServiceImpl_CommentAction(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	redis.InitRedis()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
@@ -66,8 +66,8 @@ func TestCommentServiceImpl_CommentAction(t *testing.T) {
 
 func TestCommentServiceImpl_DeleteCommentAction(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	redis.InitRedis()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
@@ -91,8 +91,8 @@ func TestCommentServiceImpl_DeleteCommentAction(t *testing.T) {
 
 func TestCommentServiceImpl_GetCommentList(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
 	redis.InitRedis()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
