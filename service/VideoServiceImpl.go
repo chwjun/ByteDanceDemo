@@ -38,14 +38,16 @@ func (videoService *VideoServiceImp) Test() {
 }
 
 func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) ([]ResponseVideo, time.Time, error) {
-	t1 := time.Now()
+	// dao.SetDefault(database.DB)
+	// fmt.Println("进入了feed")
 	// 根据最新时间查找数据库获取视频的信息
 	dao_video_list, err := GetVideosByLatestTime(latest_time)
+	// fmt.Println(len(dao_video_list))
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
 		fmt.Println("Feed")
 		return nil, time.Time{}, err
 	}
-	log.Println("数据库操作运行时间:", time.Now().Sub(t1))
+	// log.Println("数据库操作运行时间:", time.Now().Sub(t1))
 	t2 := time.Now()
 	// 获取剩余信息，构造返回的结构体
 	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
@@ -166,7 +168,7 @@ func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (in
 }
 
 func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo, error) {
-
+	// dao.SetDefault(database.DB)
 	dao_video_list, err := videoService.GetVideoListByAuthorID(user_id)
 	if err != nil {
 		return nil, err
@@ -179,7 +181,8 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 }
 
-// 数据库操作
+const Video_list_size = 10
+
 func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
 	V := dao.Video
 	// fmt.Println(V)
