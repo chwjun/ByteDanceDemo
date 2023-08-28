@@ -28,7 +28,7 @@ type FriendUserListResponse struct {
 
 // RelationAction no practical effect, just check if token is valid
 func RelationAction(c *gin.Context) {
-	userId := c.GetInt64("userId")
+	userId := c.GetInt64("user_id")
 	//userId, err1 := strconv.ParseInt(c.Query("userId"), 10, 64)
 	toUserId, err2 := strconv.ParseInt(c.Query("to_user_id"), 10, 64)
 	actionType, err3 := strconv.ParseInt(c.Query("action_type"), 10, 64)
@@ -42,6 +42,16 @@ func RelationAction(c *gin.Context) {
 			Response{
 				StatusCode: -1,
 				StatusMsg:  "请求参数格式错误",
+			},
+		})
+		return
+	}
+	if userId == toUserId {
+		fmt.Printf("fail")
+		c.JSON(http.StatusOK, RelationActionResp{
+			Response{
+				StatusCode: -1,
+				StatusMsg:  "不能关注或取关自己",
 			},
 		})
 		return
