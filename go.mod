@@ -7,7 +7,6 @@ require (
 	github.com/casbin/gorm-adapter/v2 v2.1.0
 	github.com/gavv/httpexpect/v2 v2.8.0
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gookit/slog v0.5.4
 	github.com/importcjj/sensitive v0.0.0-20200106142752-42d1c505be7b

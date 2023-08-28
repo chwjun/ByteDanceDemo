@@ -11,7 +11,7 @@ func Setup() {
 	r := gin.New()
 	r.Use(middleware.RateLimitMiddleware(viper.GetInt64("settings.application.rateLimit")))
 	r.Use(middleware.LoggerMiddleware)
-	r.Use(middleware.ErrorMiddleware)
+	//r.Use(middleware.ErrorMiddleware)
 	r.Use(middleware.JWTMiddleware)
 	r.Use(middleware.CasbinMiddleware)
 

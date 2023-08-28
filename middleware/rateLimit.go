@@ -14,8 +14,8 @@ func RateLimitMiddleware(limit int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
 		key := "rate_" + ip + "_" + strconv.Itoa(int(time.Now().Unix()))
-		result, err := redis2.RateLimitClient.Incr(key).Result()
-		redis2.RateLimitClient.Expire(key, time.Minute)
+		result, err := redis2.RateLimitClient.Incr(redis2.Ctx, key).Result()
+		redis2.RateLimitClient.Expire(redis2.Ctx, key, time.Minute)
 		if err != nil {
 			zap.L().Error("redis连接失败", zap.Error(err))
 			return

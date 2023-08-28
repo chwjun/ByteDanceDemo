@@ -9,7 +9,6 @@ import (
 	redis3 "bytedancedemo/utils"
 
 	"bytedancedemo/middleware/rabbitmq"
-	"bytedancedemo/middleware/redis"
 	"bytedancedemo/router"
 
 	"bytedancedemo/utils/log"
@@ -30,7 +29,7 @@ var (
 			config2.Init(config)
 			log.InitLogger(mode) //日志重复
 			mysql.Init()
-			redis.InitRedis()
+			//redis.InitRedis()
 			redis2.Init()
 			redis3.Init()
 			rabbitmq.InitRabbitMQ()
