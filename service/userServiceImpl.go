@@ -5,7 +5,6 @@ import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
 	"bytedancedemo/utils"
-	"errors"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -47,11 +46,11 @@ func (usi *UserServiceImpl) GetUserBasicByPassword(username string, password str
 	u := dao.User
 	resList, err := u.Where(u.Name.Eq(username), u.Password.Eq(password)).Find()
 	if err != nil {
-		zap.L().Fatal("查询用户失败", zap.String("err", err.Error()))
+		zap.L().Fatal("查询用户失败", zap.Error(err))
 		return nil, false
 	}
 	if len(resList) == 0 {
-		zap.L().Warn("未查询到用户", zap.Error(errors.New("用户名或密码错误")))
+		zap.L().Warn("未查询到用户")
 		return nil, false
 	}
 	return resList[0], true
@@ -65,8 +64,12 @@ func (usi *UserServiceImpl) GetUserDetailsById(id int64, curID *int64) (*User, e
 	u := dao.User
 	resList, err := u.Where(u.ID.Eq(id)).Find()
 
-	if err != nil || len(resList) == 0 {
-		zap.L().Fatal("查询用户失败 ", zap.String("err", err.Error()))
+	if err != nil {
+		zap.L().Error("没有找到用户", zap.Error(err))
+		return nil, err
+	}
+	if len(resList) == 0 {
+		zap.L().Warn("没有找到用户")
 		return nil, err
 	}
 	user.Name = resList[0].Name
