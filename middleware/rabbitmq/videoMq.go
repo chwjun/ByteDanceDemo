@@ -36,7 +36,7 @@ func newVideoRabbitMQ(queueName string, exchangeName string, key string, replyto
 
 // PublishSimpleVideo simple模式下视频请求生产者
 func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
-	fmt.Println("video生产")
+	fmt.Println("video生产" + r.QueueName)
 	//1.申请队列，如果队列不存在会自动创建，存在则跳过创建
 	_, err := r.channel.QueueDeclare(
 		r.QueueName,
@@ -72,10 +72,10 @@ func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("处理回调")
+	fmt.Println("等待回调：queuename : ", r.CorrID, " ReplyTo : ", r.ReplyName)
 	// 处理回调,判断消息是否处理
 	content, err := r.channel.Consume(
-		r.QueueName,
+		r.ReplyName,
 		"",
 		false,
 		false,
@@ -194,6 +194,7 @@ func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
 		// 解析参数
 		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
 		log.Println("添加视频消费者获得 params:", params)
+		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", r.CorrID)
 		// 回调队列
 		r.channel.Publish(
 			r.Exchange,
@@ -207,6 +208,7 @@ func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
 				Body:          []byte("Finish"),
 			},
 		)
+		fmt.Println("回调发送完毕")
 	}
 }
 

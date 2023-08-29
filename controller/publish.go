@@ -3,6 +3,7 @@ package controller
 import (
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/service"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -39,25 +40,25 @@ func Publish(c *gin.Context) {
 	}
 	title := c.PostForm("title")
 	videoservice := service.NewVSIInstance()
-	videoservice.Action(data, title, user_id)
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
+	err = videoservice.Action(data, title, user_id)
+	if err != nil {
+		log.Println("Action ERROR : ", err)
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
-			StatusMsg:  err.Error(),
+			StatusMsg:  "上传或存储失败" + err.Error(),
 		})
-		return
 	}
 
 	c.JSON(http.StatusOK, Response{
 		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
+		StatusMsg:  title + " uploaded successfully",
 	})
 }
 
 // PublishList all users have same publish video list
 func PublishList(c *gin.Context) {
 	user_id := int64(0)
-	user_id_temp, exits := c.Get("userID")
+	user_id_temp, exits := c.Get("user_id")
 	if !exits {
 		user_id = int64(0)
 	}
@@ -67,8 +68,8 @@ func PublishList(c *gin.Context) {
 	default:
 		user_id = int64(0)
 	}
-	feedMQ := rabbitmq.SimpleVideoFeedMq
-	err := feedMQ.PublishSimpleVideo("publishlist", c)
+	publishlistMQ := rabbitmq.SimpleVideoPublishListMq
+	err := publishlistMQ.PublishSimpleVideo("publishlist", c)
 	if err != nil {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},

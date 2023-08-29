@@ -211,6 +211,7 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 		result = nil
 		return nil, err
 	}
+	log.Println("从数据库获取视频的数量", len(result))
 	return result, err
 }
 
@@ -224,7 +225,25 @@ func (videoService *VideoServiceImp) Action(data *multipart.FileHeader, title st
 		return err
 	}
 	err = InsertVideo(videoName, userID, title)
+	if err != nil {
+		log.Println("Insert Video ERROR : ", err)
+		return err
+	}
 	return nil
+}
+
+// 将视频信息加入到数据库中
+func InsertVideo(videoname string, userID int64, title string) error {
+	var video model.Video
+	playurl := oss.URLPre + videoname + ".mp4"
+	video.AuthorID = userID
+	video.PlayURL = playurl
+	video.CreatedAt = time.Now()
+	video.UpdatedAt = time.Now()
+	video.CoverURL = playurl + oss.CoverURL_SUFFIX
+	Video := dao.Video
+	err := Video.Create(&video)
+	return err
 }
 
 // 视频上传到oss

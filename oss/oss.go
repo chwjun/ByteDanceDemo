@@ -12,12 +12,13 @@ var client *oss.Client
 var Bucket *oss.Bucket
 
 const (
-	endpoint     = "https://oss-cn-beijing.aliyuncs.com"
-	endpointname = "oss-cn-beijing.aliyuncs.com"
-	accessID     = "LTAI5t6kxoYpTPWZXw6ES6Gu"
-	accessKey    = "hBUvanHY0OkbQG5IseB2KLzecypsjr"
-	bucketName   = "sample-douyin-video"
-	URLPre       = "https://" + bucketName + "." + endpointname
+	endpoint        = "https://oss-cn-beijing.aliyuncs.com"
+	endpointname    = "oss-cn-beijing.aliyuncs.com"
+	accessID        = "LTAI5t6kxoYpTPWZXw6ES6Gu"
+	accessKey       = "hBUvanHY0OkbQG5IseB2KLzecypsjr"
+	bucketName      = "sample-douyin-video"
+	URLPre          = "https://" + bucketName + "." + endpointname
+	CoverURL_SUFFIX = "?x-oss-process=video/snapshot,t_1000,m_fast"
 )
 
 func Init() {
