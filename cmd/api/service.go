@@ -5,9 +5,7 @@ import (
 	config2 "bytedancedemo/config"
 	"bytedancedemo/dao"
 	"bytedancedemo/database/mysql"
-	redis2 "bytedancedemo/database/redis"
-	redis3 "bytedancedemo/utils"
-
+	"bytedancedemo/database/redis"
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/router"
 
@@ -29,9 +27,7 @@ var (
 			config2.Init(config)
 			log.InitLogger(mode) //日志重复
 			mysql.Init()
-			//redis.InitRedis()
-			redis2.Init()
-			redis3.Init()
+			redis.Init()
 			rabbitmq.InitRabbitMQ()
 			rabbitmq.InitCommentRabbitMQ()
 			rabbitmq.InitFollowRabbitMQ()

@@ -1,8 +1,9 @@
 package service
 
 import (
-	"bytedancedemo/utils"
+	redis2 "bytedancedemo/database/redis"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"strconv"
 
@@ -140,7 +141,7 @@ func (s *FavoriteServiceImpl) GetUserInfoByIDs(requestingUserID int64, userIDs [
 	if err != nil {
 		return nil, err
 	}
-	FavoriteCount, err := utils.GetUserFavorites(userIDs)
+	FavoriteCount, err := GetUserFavorites(userIDs)
 
 	if err != nil {
 		return nil, err
@@ -433,7 +434,7 @@ func GetUserTotalReceivedLikes(userIDs []int64) (map[int64]int64, error) {
 //		}
 //
 //		// 使用 GetTotalLikeCounts 函数获取这些视频的总喜欢数
-//		totalLikeCount, err := utils.GlobalRedisClient.GetTotalLikeCounts(videoIDs)
+//		totalLikeCount, err := utils.FavoriteRedisClient.GetTotalLikeCounts(videoIDs)
 //		if err != nil {
 //
 //			return nil, fmt.Errorf("无法获取视频的总喜欢数: %v", err)
@@ -501,4 +502,47 @@ func (s *FavoriteServiceImpl) AreVideosLikedByUser(userID int64, videoIDs []int6
 	}
 
 	return likedVideos, nil
+}
+
+func GetUserFavorites(userIDs []int64) (map[int64]int64, error) {
+	ctx := redis2.Ctx
+	pipe := redis2.FavoriteRedisClient.Pipeline()
+
+	// 创建一个存储未来结果的映射
+	futures := make(map[int64]*redis.StringCmd)
+	for _, userID := range userIDs {
+		userKey := fmt.Sprintf("user:%d", userID)
+		userLikesField := "totalLikes"
+		futures[userID] = pipe.HGet(ctx, userKey, userLikesField)
+	}
+
+	_, err := pipe.Exec(ctx)
+	if err != nil && err != redis.Nil {
+		return nil, fmt.Errorf("failed to execute pipeline: %v", err)
+	}
+
+	// 提取结果
+	result := make(map[int64]int64)
+	for userID, future := range futures {
+		likesStr, err := future.Result()
+		if err != nil {
+			if err == redis.Nil {
+				// 如果用户不存在，则设置键并将值设为0
+				userKey := fmt.Sprintf("user:%d", userID)
+				userLikesField := "totalLikes"
+				if err := redis2.FavoriteRedisClient.HSet(ctx, userKey, userLikesField, "0").Err(); err != nil {
+					return nil, fmt.Errorf("failed to set user favorites for user %d: %v", userID, err)
+				}
+				continue
+			}
+			return nil, fmt.Errorf("failed to get user favorites for user %d: %v", userID, err)
+		}
+		likes, err := strconv.ParseInt(likesStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse favorites for user %d: %v", userID, err)
+		}
+		result[userID] = likes
+	}
+
+	return result, nil
 }

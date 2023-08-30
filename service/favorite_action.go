@@ -2,11 +2,12 @@ package service
 
 import (
 	"bytedancedemo/database/mysql"
-	"bytedancedemo/utils"
+	redis2 "bytedancedemo/database/redis"
 	"container/heap"
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"strconv"
 	"sync"
 	"time"
@@ -174,13 +175,13 @@ func processTask(task Task) Result {
 	switch task.Action {
 	case 1:
 		err = likeVideo(task.UserID, task.VideoID)
-		err := utils.UpdateLikeCounts(task.UserID, task.VideoID, true)
+		err := UpdateLikeCounts(task.UserID, task.VideoID, true)
 		if err != nil {
 			return Result{}
 		}
 	case 2:
 		err = unlikeVideo(task.UserID, task.VideoID)
-		err := utils.UpdateLikeCounts(task.UserID, task.VideoID, false)
+		err := UpdateLikeCounts(task.UserID, task.VideoID, false)
 		if err != nil {
 			return Result{}
 		}
@@ -241,7 +242,7 @@ func (s *FavoriteServiceImpl) FavoriteAction(userId int64, videoID int64, action
 	//quit := make(chan bool)
 
 	// 启动工人
-	//go startWorkers(5, taskQueue, results, quit, s.utils.GlobalRedisClient, dispatchSignal)
+	//go startWorkers(5, taskQueue, results, quit, s.utils.FavoriteRedisClient, dispatchSignal)
 	//
 	//slog.Debug("Workers started")
 	//
@@ -351,8 +352,8 @@ func unlikeVideo(userID int64, videoID int64) error {
 }
 
 func (s *FavoriteServiceImpl) GetVideosLikes(videoIDs []int64) (map[int64]int64, error) {
-	ctx := utils.GlobalRedisClient.Ctx
-	pipe := utils.GlobalRedisClient.Client.Pipeline()
+	ctx := redis2.Ctx
+	pipe := redis2.FavoriteRedisClient.Pipeline()
 
 	futures := make(map[int64]*redis.StringCmd)
 	for _, videoID := range videoIDs {
@@ -385,4 +386,47 @@ func (s *FavoriteServiceImpl) GetVideosLikes(videoIDs []int64) (map[int64]int64,
 	}
 
 	return result, nil
+}
+
+func UpdateLikeCounts(userID int64, videoID int64, like bool) error {
+	// 定义哈希表的键
+	userKey := fmt.Sprintf("user:%d", userID)
+	videoKey := fmt.Sprintf("video:%d", videoID)
+	zap.L().Debug("updateLikeCounts")
+	// 定义操作数（增加或减少）
+	var operation int64
+	if like {
+		operation = 1
+	} else {
+		operation = -1
+	}
+
+	// 获取 Redis 上下文
+	ctx := redis2.Ctx
+	pipe := redis2.FavoriteRedisClient.Pipeline()
+
+	// 更新用户的点赞总数
+	userLikesField := "totalLikes"
+	userUpdateCmd := pipe.HIncrBy(ctx, userKey, userLikesField, operation)
+
+	// 更新视频的获赞总数
+	videoLikesField := "totalVideoLikes"
+	videoUpdateCmd := pipe.HIncrBy(ctx, videoKey, videoLikesField, operation)
+
+	// 执行管道中的所有命令
+	if _, err := pipe.Exec(ctx); err != nil {
+		return fmt.Errorf("failed to execute pipeline: %v", err)
+	}
+
+	// 检查用户更新的错误
+	if err := userUpdateCmd.Err(); err != nil {
+		return fmt.Errorf("failed to update user likes: %v", err)
+	}
+
+	// 检查视频更新的错误
+	if err := videoUpdateCmd.Err(); err != nil {
+		return fmt.Errorf("failed to update video likes: %v", err)
+	}
+
+	return nil
 }

@@ -17,7 +17,7 @@ var (
 	Ctx        context.Context
 	// RdbTest 测试链接
 	RdbTest *redis.Client
-	// RateLimitClient 限流中间件链接
+	// RateLimitClient 限流中间件
 	RateLimitClient *redis.Client
 	// UserFollowings 根据用户id找到他关注的人
 	UserFollowings *redis.Client
@@ -31,6 +31,8 @@ var (
 	RdbCVid *redis.Client
 	// RdbCIdComment 根据commentId 找comment
 	RdbCIdComment *redis.Client
+	// FavoriteRedisClient 点赞模块redis
+	FavoriteRedisClient *redis.Client
 )
 
 func Init() {
@@ -82,6 +84,11 @@ func Init() {
 		Addr:     Addr,
 		Password: Password,
 		DB:       7,
+	})
+	FavoriteRedisClient = redis.NewClient(&redis.Options{
+		Addr:     Addr,
+		Password: Password,
+		DB:       8,
 	})
 	_, err := RdbTest.Ping(Ctx).Result()
 	if err != nil {

@@ -4,7 +4,6 @@ package service
 import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
-	"bytedancedemo/utils"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -141,7 +140,7 @@ func (usi *UserServiceImpl) GetUserDetailsById(id int64, curID *int64) (*User, e
 
 	// 获取点赞数
 	go func() {
-		favorites, err := utils.GetUserFavorites([]int64{id})
+		favorites, err := GetUserFavorites([]int64{id})
 		if err != nil {
 			wg.Done()
 			return
