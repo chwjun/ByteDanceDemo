@@ -3,9 +3,9 @@ package service
 import (
 	"bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
+	"bytedancedemo/database/redis"
 	"bytedancedemo/middleware/rabbitmq"
-	"bytedancedemo/middleware/redis"
 	"fmt"
 	"log"
 	"testing"
@@ -13,9 +13,9 @@ import (
 
 func TestFollowServiceImp_FollowAction(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	result, err := followServiceImp.FollowAction(1, 2)
@@ -27,9 +27,9 @@ func TestFollowServiceImp_FollowAction(t *testing.T) {
 
 func TestFollowServiceImp_CancelFollowAction(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	result, err := followServiceImp.CancelFollowAction(1, 2)
@@ -41,9 +41,9 @@ func TestFollowServiceImp_CancelFollowAction(t *testing.T) {
 
 func TestFollowServiceImp_GetFollowings(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	followings, err := followServiceImp.GetFollowings(1)
@@ -56,9 +56,9 @@ func TestFollowServiceImp_GetFollowings(t *testing.T) {
 
 func TestFollowServiceImp_GetFollowers(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	followers, err := followServiceImp.GetFollowers(2)
@@ -70,9 +70,9 @@ func TestFollowServiceImp_GetFollowers(t *testing.T) {
 
 func TestFollowServiceImp_GetFriends(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	friends, err := followServiceImp.GetFriends(2)
@@ -84,9 +84,9 @@ func TestFollowServiceImp_GetFriends(t *testing.T) {
 
 func TestFollowServiceImp_GetFollowingCnt(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	userIdCnt, err := followServiceImp.GetFollowingCnt(2)
@@ -98,9 +98,9 @@ func TestFollowServiceImp_GetFollowingCnt(t *testing.T) {
 
 func TestFollowServiceImp_GetFollowerCnt(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	userIdCnt, err := followServiceImp.GetFollowerCnt(2)
@@ -112,9 +112,9 @@ func TestFollowServiceImp_GetFollowerCnt(t *testing.T) {
 
 func TestFollowServiceImp_CheckIsFollowing(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitFollowRabbitMQ()
 	result, err := followServiceImp.CheckIsFollowing(1, 2)

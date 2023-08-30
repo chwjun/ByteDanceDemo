@@ -45,8 +45,8 @@ func (messageService *MessageServiceImpl) SendMessage(userId int64, toUserId int
 
 func (messageService *MessageServiceImpl) GetChatHistory(userId int64, toUserId int64, lastTime time.Time) ([]*model.Message, error) {
 	m := dao.Message
-	msg, err := m.Where(m.CreatedAt.Gt(lastTime), m.CreatedAt.Lt(time.Now())).
-		Where(m.SenderID.Eq(userId), m.ReceiverID.Eq(toUserId)).Or(m.SenderID.Eq(toUserId), m.ReceiverID.Eq(userId)).
+	msg, err := m.Where(m.SenderID.Eq(userId), m.ReceiverID.Eq(toUserId)).Or(m.SenderID.Eq(toUserId), m.ReceiverID.Eq(userId)).
+		Where(m.CreatedAt.Lt(lastTime)).
 		Order(m.CreatedAt).
 		Find()
 	if err != nil {
@@ -68,4 +68,16 @@ func (messageService *MessageServiceImpl) GetLatestMessage(userId int64, selecte
 		return nil, errors.New("没有消息")
 	}
 	return msg[0], nil
+}
+
+func TransferMsg(msg []*model.Message) []Message {
+	newMsg := make([]Message, len(msg))
+	for i, m := range msg {
+		newMsg[i].Id = m.ID
+		newMsg[i].ToUserId = m.ReceiverID
+		newMsg[i].FromUserId = m.SenderID
+		newMsg[i].Content = m.Content
+		newMsg[i].CreateTime = m.CreatedAt.String()
+	}
+	return newMsg
 }

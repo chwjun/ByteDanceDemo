@@ -46,8 +46,8 @@ func TestGetFavoriteVideoInfoByUserID(t *testing.T) {
 		if video.ID <= 0 {
 			t.Errorf("expected positive video ID, got %d", video.ID)
 		}
-		if video.Author.ID <= 0 {
-			t.Errorf("expected positive author ID, got %d", video.Author.ID)
+		if video.Author.Id <= 0 {
+			t.Errorf("expected positive author ID, got %d", video.Author.Id)
 		}
 		// 可以继续添加其他检查
 	}
@@ -97,7 +97,7 @@ func TestGetUserInfoByIDs(t *testing.T) {
 	// 打印每个用户的每个字段
 	for i, user := range users {
 		fmt.Printf("User %d:\n", i+1)
-		fmt.Printf("  ID: %v\n", user.ID)
+		fmt.Printf("  ID: %v\n", user.Id)
 		fmt.Printf("  Name: %s\n", user.Name)
 		fmt.Printf("  FollowCount: %v\n", user.FollowCount)
 		fmt.Printf("  FollowerCount: %v\n", user.FollowerCount)

@@ -3,9 +3,9 @@ package service
 import (
 	"bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
+	"bytedancedemo/database/redis"
 	"bytedancedemo/middleware/rabbitmq"
-	"bytedancedemo/middleware/redis"
 	"bytedancedemo/model"
 	"github.com/gookit/goutil/timex"
 	"log"
@@ -22,9 +22,9 @@ func TestGetMessageServiceInstance(t *testing.T) {
 
 func TestMessageServiceImpl_SendMessage(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
 
@@ -43,9 +43,9 @@ func TestMessageServiceImpl_SendMessage(t *testing.T) {
 
 func TestMessageServiceImpl_GetChatHistory(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
 
@@ -55,15 +55,15 @@ func TestMessageServiceImpl_GetChatHistory(t *testing.T) {
 	}
 
 	for _, msg := range chat {
-		log.Println(*msg)
+		log.Println(msg)
 	}
 }
 
 func TestMessageServiceImpl_GetLatestMessage(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
 
@@ -71,7 +71,7 @@ func TestMessageServiceImpl_GetLatestMessage(t *testing.T) {
 	if err != nil {
 		t.Errorf("Get lastest message failed!")
 	}
-	log.Println(*msg)
+	log.Println(msg)
 }
 
 //

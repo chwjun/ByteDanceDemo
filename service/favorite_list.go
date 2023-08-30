@@ -4,6 +4,7 @@ import (
 	"bytedancedemo/utils"
 	"fmt"
 	"go.uber.org/zap"
+	"strconv"
 
 	"bytedancedemo/dao"
 )
@@ -254,7 +255,7 @@ func GetCommentCounts(videoIDs []int64) (map[int64]int64, error) {
 	// 使用IN操作符一次性获取所有视频的评论数量
 	err := dao.Comment.
 		Where(dao.Comment.VideoID.In(videoIDs...)).
-		Where(dao.Comment.ActionType.Eq(string(1))).
+		Where(dao.Comment.ActionType.Eq(strconv.Itoa(1))).
 		Select(dao.Comment.VideoID, dao.Comment.ID.Count().As("count")).
 		Group(dao.Comment.VideoID).
 		Scan(&counts) // 注意这里添加了.Error，用于获取错误信息

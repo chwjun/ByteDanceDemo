@@ -3,12 +3,11 @@ package service
 import (
 	"bytedancedemo/config"
 	"bytedancedemo/dao"
-	"bytedancedemo/database"
+	"bytedancedemo/database/mysql"
 	"bytedancedemo/middleware/rabbitmq"
 	"fmt"
 
-	//"bytedancedemo/dao"
-	"bytedancedemo/middleware/redis"
+	"bytedancedemo/database/redis"
 	"bytedancedemo/model"
 	"log"
 	"testing"
@@ -25,7 +24,7 @@ import (
 // Package service @Author: youngalone [2023/8/18]
 
 // 测试单例模式
-func TestGetUserServiceInstance(t *testing.T) {
+func TestGetCommentServiceInstance(t *testing.T) {
 	usi1 := GetCommentServiceInstance()
 	usi2 := GetCommentServiceInstance()
 	if usi1 != usi2 {
@@ -35,9 +34,9 @@ func TestGetUserServiceInstance(t *testing.T) {
 
 func TestCommentServiceImpl_CommentAction(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
 	//rabbitmq.InitFollowRabbitMQ()
@@ -66,9 +65,9 @@ func TestCommentServiceImpl_CommentAction(t *testing.T) {
 
 func TestCommentServiceImpl_DeleteCommentAction(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
 	var comment model.Comment = model.Comment{
@@ -91,9 +90,9 @@ func TestCommentServiceImpl_DeleteCommentAction(t *testing.T) {
 
 func TestCommentServiceImpl_GetCommentList(t *testing.T) {
 	config.Init("../config/settings.yml")
-	database.Init()
-	dao.SetDefault(database.DB)
-	redis.InitRedis()
+	mysql.Init()
+	dao.SetDefault(mysql.DB)
+	redis.Init()
 	rabbitmq.InitRabbitMQ()
 	rabbitmq.InitCommentRabbitMQ()
 
