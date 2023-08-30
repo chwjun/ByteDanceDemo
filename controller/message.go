@@ -50,7 +50,7 @@ func MessageAction(c *gin.Context) {
 	toUserId := c.Query("to_user_id")
 	actionType1 := c.Query("action_type")
 	content := c.Query("content")
-	userId := c.GetInt64()
+	userId := c.GetInt64("user_id")
 	tarUserId, err := strconv.ParseInt(toUserId, 10, 64)
 	actionType, err1 := strconv.ParseInt(actionType1, 10, 32)
 	if err != nil || err1 != nil {
