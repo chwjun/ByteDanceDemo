@@ -68,7 +68,7 @@ func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) 
 func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoServiceImp, user_id int64) ([]ResponseVideo, error) {
 	// 返回的视频流
 	response_video_list := make([]ResponseVideo, len(dao_video_list))
-	for _, video := range dao_video_list {
+	for index, video := range dao_video_list {
 		temp_response_video := ResponseVideo{}
 		var wait_group sync.WaitGroup
 		wait_group.Add(5)
@@ -148,7 +148,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 		}(video, &temp_response_video)
 		wait_group.Wait()
 		log.Println("运行时间:", time.Since(t_total))
-		response_video_list = append(response_video_list, temp_response_video)
+		response_video_list[index] = temp_response_video
 	}
 	return response_video_list, nil
 }
