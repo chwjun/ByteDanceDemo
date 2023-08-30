@@ -3,13 +3,14 @@ package service
 import (
 	"bytedancedemo/dao"
 	"bytedancedemo/model"
-	"bytedancedemo/oss"
+	oss1 "bytedancedemo/oss"
+	"bytes"
 	"fmt"
 	"log"
-	"mime/multipart"
 	"sync"
 	"time"
 
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/rs/xid"
 )
 
@@ -216,7 +217,8 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 }
 
 // 上传视频接口
-func (videoService *VideoServiceImp) Action(data *multipart.FileHeader, title string, userID int64) error {
+func (videoService *VideoServiceImp) Action(data []byte, title string, userID int64) error {
+	getbucketfile()
 	// 生成唯一文件名
 	videoName := xid.New().String()
 	err := UploadVideoToOSS(data, videoName)
@@ -235,30 +237,52 @@ func (videoService *VideoServiceImp) Action(data *multipart.FileHeader, title st
 // 将视频信息加入到数据库中
 func InsertVideo(videoname string, userID int64, title string) error {
 	var video model.Video
-	playurl := oss.URLPre + videoname + ".mp4"
+	playurl := oss1.URLPre + videoname + ".mp4"
 	video.AuthorID = userID
 	video.PlayURL = playurl
 	video.CreatedAt = time.Now()
 	video.UpdatedAt = time.Now()
-	video.CoverURL = playurl + oss.CoverURL_SUFFIX
+	video.CoverURL = playurl + oss1.CoverURL_SUFFIX
 	Video := dao.Video
 	err := Video.Create(&video)
 	return err
 }
 
-// 视频上传到oss
-func UploadVideoToOSS(data *multipart.FileHeader, videoname string) error {
-	file, err := data.Open()
-	if err != nil {
-		log.Println("Open file failed")
-		return err
-	}
-	defer file.Close()
+// 进度监听器
+type progressListener struct{}
 
-	err = oss.Bucket.PutObject(oss.URLPre+".mp4", file)
+// 监听上传进度
+func (p *progressListener) ProgressChanged(event *oss.ProgressEvent) {
+	// 这里可以根据自己的需求处理上传进度更新事件
+	fmt.Printf("已上传：%d / %d\n", event.ConsumedBytes, event.TotalBytes)
+}
+
+// 视频上传到oss
+func UploadVideoToOSS(data []byte, videoname string) error {
+	err := oss1.Bucket.PutObject(oss1.URLPre+videoname+".mp4", bytes.NewReader(data))
 	if err != nil {
 		log.Println("Put Object ERROR : ", err)
 		return err
 	}
 	return nil
+}
+
+func getbucketfile() {
+	bucket := oss1.Bucket
+	continueToken := ""
+	for {
+		lsRes, err := bucket.ListObjectsV2(oss.ContinuationToken(continueToken))
+		if err != nil {
+			log.Println("err", err.Error())
+		}
+		// 打印列举结果。默认情况下，一次返回100条记录。
+		for _, object := range lsRes.Objects {
+			fmt.Println(object.Key, object.Type, object.Size, object.ETag, object.LastModified, object.StorageClass)
+		}
+		if lsRes.IsTruncated {
+			continueToken = lsRes.NextContinuationToken
+		} else {
+			break
+		}
+	}
 }

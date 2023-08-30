@@ -17,14 +17,8 @@ type VideoListResponse struct {
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
 
-	data, err := c.FormFile("data")
-	if err != nil {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-		return
-	}
+	data_str := c.Query("data")
+	data := []byte(data_str)
 	// 获取用户id
 	user_id := int64(0)
 	user_id_temp, exits := c.Get("user_id")
@@ -40,7 +34,7 @@ func Publish(c *gin.Context) {
 	}
 	title := c.PostForm("title")
 	videoservice := service.NewVSIInstance()
-	err = videoservice.Action(data, title, user_id)
+	err := videoservice.Action(data, title, user_id)
 	if err != nil {
 		log.Println("Action ERROR : ", err)
 		c.JSON(http.StatusOK, Response{
