@@ -99,7 +99,7 @@ func MessageChat(c *gin.Context) {
 	}
 	messageService := service.GetMessageServiceInstance()
 	messages, err := messageService.GetChatHistory(userId, targetUserId, latestTime)
-	log.Println(messages)
+	//log.Println(messages)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: err.Error()})
 	} else {
