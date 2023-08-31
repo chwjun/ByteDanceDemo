@@ -80,13 +80,18 @@ func MessageChat(c *gin.Context) {
 	userId := c.GetInt64("user_id")
 	toUserId := c.Query("to_user_id")
 	preMsgTime := c.Query("pre_msg_time")
+	//if preMsgTime == "" {
+	//	preMsgTime = "0"
+	//}
 	log.Println("preMsgTime", preMsgTime)
 	covPreMsgTime, err := strconv.ParseInt(preMsgTime, 10, 64)
 	if err != nil {
 		log.Println("preMsgTime 参数错误")
-		return
+		//return
 	}
-	latestTime := time.Unix(covPreMsgTime, 0)
+	nSeconds := (covPreMsgTime % 1000) * 1000000
+	seconds := covPreMsgTime / 1000
+	latestTime := time.Unix(seconds, nSeconds)
 	targetUserId, err := strconv.ParseInt(toUserId, 10, 64)
 	if err != nil {
 		log.Println("toUserId 参数错误")

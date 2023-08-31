@@ -5,6 +5,8 @@ import (
 	"bytedancedemo/model"
 	"errors"
 	"github.com/gookit/slog"
+	"gorm.io/gen/field"
+	"strconv"
 	"time"
 )
 
@@ -45,8 +47,8 @@ func (messageService *MessageServiceImpl) SendMessage(userId int64, toUserId int
 
 func (messageService *MessageServiceImpl) GetChatHistory(userId int64, toUserId int64, lastTime time.Time) ([]*model.Message, error) {
 	m := dao.Message
-	msg, err := m.Where(m.SenderID.Eq(userId), m.ReceiverID.Eq(toUserId)).Or(m.SenderID.Eq(toUserId), m.ReceiverID.Eq(userId)).
-		Where(m.CreatedAt.Lt(lastTime)).
+	msg, err := m.Where(m.Columns(m.SenderID, m.ReceiverID).In(field.Values([][]interface{}{{userId, toUserId}, {toUserId, userId}}))).
+		Where(m.CreatedAt.Gt(lastTime)).
 		Order(m.CreatedAt).
 		Find()
 	if err != nil {
@@ -77,7 +79,7 @@ func TransferMsg(msg []*model.Message) []Message {
 		newMsg[i].ToUserId = m.ReceiverID
 		newMsg[i].FromUserId = m.SenderID
 		newMsg[i].Content = m.Content
-		newMsg[i].CreateTime = m.CreatedAt.String()
+		newMsg[i].CreateTime = strconv.FormatInt(m.CreatedAt.UnixMilli(), 10)
 	}
 	return newMsg
 }
