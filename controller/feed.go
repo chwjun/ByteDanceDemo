@@ -21,6 +21,7 @@ type FeedResponse struct {
 // 参数latest_time 和 token
 func Feed(c *gin.Context) {
 	default_time := time.Now().UnixMilli()
+
 	var temp int64
 	var latest_time time.Time
 	var latest_time_str = c.Query("latest_time")
@@ -36,6 +37,9 @@ func Feed(c *gin.Context) {
 		// 时间只能是比现在小的
 		if temp > default_time {
 			temp = default_time
+		}
+		if temp <= 0 {
+			temp = time.Now().UnixMilli()
 		}
 		latest_time = time.UnixMilli(temp)
 	}

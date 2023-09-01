@@ -7,6 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
+
+	// "github.com/rs/xid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -18,7 +21,6 @@ type VideoMQ struct {
 	QueueName string
 	Exchange  string
 	Key       string
-	CorrID    string
 	ReplyName string
 	// CallBackExchange string
 	Call_Back_Queue amqp.Queue
@@ -27,15 +29,17 @@ type VideoMQ struct {
 var SimpleVideoFeedMq *VideoMQ
 var SimpleVideoPublishListMq *VideoMQ
 
+// var callbacks = make(map[string]chan amqp.Delivery)
+// var callbacksRWMutex sync.RWMutex
+
 // 新建“视频”消息队列
-func newVideoRabbitMQ(queueName string, exchangeName string, key string, replyto string, corrid string) *VideoMQ {
+func newVideoRabbitMQ(queueName string, exchangeName string, key string, replyto string) *VideoMQ {
 	videoMQ := &VideoMQ{
 		RabbitMQ:  *BaseRmq,
 		QueueName: queueName,
 		Exchange:  exchangeName,
 		Key:       key,
 		ReplyName: replyto,
-		CorrID:    corrid,
 	}
 	var call_back_queue amqp.Queue
 	var err error
@@ -73,6 +77,25 @@ func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 	//1.申请回调队列，如果队列不存在会自动创建，存在则跳过创建
 	call_back_queue := r.Call_Back_Queue
 
+	corrID := uuid.New().String()
+	// 发送请求消息到请求队列
+	err := r.channel.Publish(
+		"",
+		r.QueueName,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType:   "text/plain",
+			Body:          []byte(message),
+			ReplyTo:       call_back_queue.Name,
+			CorrelationId: corrID,
+		},
+	)
+	if err != nil {
+		log.Println("无法发送请求消息:", err)
+	}
+	log.Println("发送请求")
+
 	// 消费回调队列中的消息
 	content, err := r.channel.Consume(
 		call_back_queue.Name, // 回调队列名称
@@ -86,32 +109,20 @@ func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
 	if err != nil {
 		log.Println("无法消费回调队列中的消息", err)
 	}
-	// 发送请求消息到请求队列
-	err = r.channel.Publish(
-		"",
-		r.QueueName,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(message),
-			ReplyTo:     call_back_queue.Name,
-		},
-	)
-	if err != nil {
-		log.Println("无法发送请求消息:", err)
-	}
-	log.Println("发送请求")
 	for msg := range content {
 		fmt.Println("msg来了")
-		if msg.CorrelationId == r.CorrID && string(msg.Body) == "Finish" {
+		fmt.Println("当前corrid：", corrID, " msg的corrid：", msg.CorrelationId)
+		if msg.CorrelationId == corrID && string(msg.Body) == "Finish" {
 			// false表示仅确认当前消息
 			msg.Ack(false)
-			break
+			return nil
+		} else {
+			msg.Nack(false, true)
 		}
+		fmt.Println("正在遍历回调队列的消息")
 	}
-	fmt.Println("回调处理完毕")
 	return nil
+
 }
 
 // ConsumeSimpleVideo simple模式下消费者 video模块
@@ -121,7 +132,7 @@ func (r *VideoMQ) ConsumeSimpleVideo() {
 	msgs, err := r.channel.Consume(
 		r.QueueName, // queue
 		//用来区分多个消费者
-		"", // consumer
+		r.QueueName+"consumer", // consumer
 		//是否自动应答
 		true, // auto-ack
 		//是否独有
@@ -164,7 +175,7 @@ func (r *VideoMQ) consumerVideoFeed(msgs <-chan amqp.Delivery) {
 		// 解析参数
 		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
 		log.Println("添加视频消费者获得 params:", params)
-		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", r.CorrID)
+		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", msg.CorrelationId)
 		// 回调队列
 		err := r.channel.Publish(
 			"",
@@ -173,7 +184,7 @@ func (r *VideoMQ) consumerVideoFeed(msgs <-chan amqp.Delivery) {
 			false,
 			amqp.Publishing{
 				ContentType:   "text/plain",
-				CorrelationId: r.CorrID,
+				CorrelationId: msg.CorrelationId,
 				// ReplyTo:       msg.ReplyTo,
 				Body: []byte("Finish"),
 			},
@@ -192,7 +203,7 @@ func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
 		// 解析参数
 		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
 		log.Println("添加视频消费者获得 params:", params)
-		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", r.CorrID)
+		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", msg.CorrelationId)
 		// 回调队列
 		err := r.channel.Publish(
 			"",
@@ -201,7 +212,7 @@ func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
 			false,
 			amqp.Publishing{
 				ContentType:   "text/plain",
-				CorrelationId: r.CorrID,
+				CorrelationId: msg.CorrelationId,
 				// ReplyTo:       msg.ReplyTo,
 				Body: []byte("Finish"),
 			},
@@ -214,13 +225,13 @@ func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
 }
 
 // NewSimpleVideoRabbitMQ 新建简单模式的消息队列（生产者，消息队列，一个消费者）
-func NewSimpleVideoRabbitMQ(queueName string, replyto string, corrid string) *VideoMQ {
-	return newVideoRabbitMQ(queueName, "", "", replyto, corrid)
+func NewSimpleVideoRabbitMQ(queueName string, replyto string) *VideoMQ {
+	return newVideoRabbitMQ(queueName, "", "", replyto)
 }
 func InitVideoRabbitMQ() {
 	// 初始化MQ对象，订阅通道
-	SimpleVideoFeedMq = NewSimpleVideoRabbitMQ("feed", "feedreply", "feed")
-	SimpleVideoPublishListMq = NewSimpleVideoRabbitMQ("publishlist", "publishlistreply", "publishlist")
+	SimpleVideoFeedMq = NewSimpleVideoRabbitMQ("feed", "feedreply")
+	SimpleVideoPublishListMq = NewSimpleVideoRabbitMQ("publishlist", "publishlistreply")
 	// 开启 go routine 启动消费者
 	go SimpleVideoFeedMq.ConsumeSimpleVideo()
 	go SimpleVideoPublishListMq.ConsumeSimpleVideo()
