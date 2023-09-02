@@ -1,238 +1,125 @@
 package rabbitmq
 
+// "bytedancedemo/service"
+// "bytedancedemo/service"
+
+// "github.com/rs/xid"
+
 import (
-	"fmt"
 	"log"
-	"strings"
+	"runtime"
 
-	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
-
-	// "github.com/rs/xid"
-	"github.com/google/uuid"
-)
-
-const (
-	retry = 10
 )
 
 type VideoMQ struct {
 	RabbitMQ
+	// ch        *amqp.Channel
 	QueueName string
-	Exchange  string
-	Key       string
-	ReplyName string
-	// CallBackExchange string
-	Call_Back_Queue amqp.Queue
 }
 
 var SimpleVideoFeedMq *VideoMQ
 var SimpleVideoPublishListMq *VideoMQ
 
-// var callbacks = make(map[string]chan amqp.Delivery)
-// var callbacksRWMutex sync.RWMutex
+func InitVideoRabbitMQ() {
+	// 初始化MQ对象，订阅通道
+	SimpleVideoFeedMq = NewSimpleVideoRabbitMQ("feed", "")
+	SimpleVideoPublishListMq = NewSimpleVideoRabbitMQ("publishlist", "")
+	log.Println("videoMQ")
+	// 开启 go routine 启动消费者
+	go SimpleVideoFeedMq.Consumer()
+	go SimpleVideoPublishListMq.Consumer()
+}
 
-// 新建“视频”消息队列
-func newVideoRabbitMQ(queueName string, exchangeName string, key string, replyto string) *VideoMQ {
+// NewSimpleVideoRabbitMQ 新建简单模式的消息队列（生产者，消息队列，一个消费者）
+func NewSimpleVideoRabbitMQ(queueName string, replyto string) *VideoMQ {
+	return newVideoRabbitMQ(queueName)
+}
+
+// 新建队列，初始化队列
+func newVideoRabbitMQ(queuename string) *VideoMQ {
 	videoMQ := &VideoMQ{
 		RabbitMQ:  *BaseRmq,
-		QueueName: queueName,
-		Exchange:  exchangeName,
-		Key:       key,
-		ReplyName: replyto,
+		QueueName: queuename,
 	}
-	var call_back_queue amqp.Queue
-	var err error
-	for i := 0; i < retry; i++ {
-		// 声明回调队列
-		call_back_queue, err = videoMQ.channel.QueueDeclare(
-			replyto,
-			//是否持久化
-			false,
-			//是否自动删除
-			false,
-			//是否具有排他性
-			false,
-			//是否阻塞处理
-			false,
-			//额外的属性
-			nil,
-		)
-		if err != nil {
-			log.Println("创建回调队列重试次数 ： ", i, queueName)
-		} else {
-			break
-		}
-	}
+	// log.Println(queuename, "there")
+	queue, err := videoMQ.video_channel.QueueDeclare(
+		queuename,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
 	if err != nil {
-		log.Println("无法创建回调队列", err.Error(), queueName)
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
+
 	}
-	videoMQ.Call_Back_Queue = call_back_queue
+	log.Println("queuename ", queue.Name)
+	log.Println(queuename, "here")
 	return videoMQ
 }
 
-// PublishSimpleVideo simple模式下视频请求生产者
-func (r *VideoMQ) PublishSimpleVideo(message string, c *gin.Context) error {
-	fmt.Println("video生产" + r.QueueName)
-	//1.申请回调队列，如果队列不存在会自动创建，存在则跳过创建
-	call_back_queue := r.Call_Back_Queue
-
-	corrID := uuid.New().String()
-	// 发送请求消息到请求队列
-	err := r.channel.Publish(
+// 发送消息
+func (r *VideoMQ) PublishRequest(queuename string) error {
+	err := r.video_channel.Publish(
 		"",
 		r.QueueName,
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   "text/plain",
-			Body:          []byte(message),
-			ReplyTo:       call_back_queue.Name,
-			CorrelationId: corrID,
+			ContentType: "text/plain",
+			Body:        []byte(queuename),
 		},
 	)
 	if err != nil {
-		log.Println("无法发送请求消息:", err)
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
+		return err
 	}
-	log.Println("发送请求")
+	log.Println("消息发布")
+	confirmations := r.video_channel.NotifyPublish(make(chan amqp.Confirmation, 1))
 
-	// 消费回调队列中的消息
-	content, err := r.channel.Consume(
-		call_back_queue.Name, // 回调队列名称
-		"",                   // 消费者名称，为空时会随机生成一个名称
-		false,                // 自动确认
-		false,                // 独占
-		false,                // 非阻塞
-		false,                // 其他属性
-		nil,                  // 额外属性
-	)
-	if err != nil {
-		log.Println("无法消费回调队列中的消息", err)
-	}
-	for msg := range content {
-		fmt.Println("msg来了")
-		fmt.Println("当前corrid：", corrID, " msg的corrid：", msg.CorrelationId)
-		if msg.CorrelationId == corrID && string(msg.Body) == "Finish" {
-			// false表示仅确认当前消息
-			msg.Ack(false)
-			return nil
-		} else {
-			msg.Nack(false, true)
-		}
-		fmt.Println("正在遍历回调队列的消息")
+	confirm := <-confirmations
+	if confirm.Ack {
+		log.Println("消息被确认")
+		return nil
+	} else {
+		log.Println("消息被拒绝")
 	}
 	return nil
-
 }
 
-// ConsumeSimpleVideo simple模式下消费者 video模块
-func (r *VideoMQ) ConsumeSimpleVideo() {
-	call_back_queue := r.Call_Back_Queue
-	//接收消息
-	msgs, err := r.channel.Consume(
-		r.QueueName, // queue
-		//用来区分多个消费者
-		r.QueueName+"consumer", // consumer
-		//是否自动应答
-		true, // auto-ack
-		//是否独有
-		false, // exclusive
-		//设置为true，表示 不能将同一个Connection中生产者发送的消息传递给这个Connection中 的消费者
-		false, // no-local
-		//列是否阻塞
-		false, // no-wait
-		nil,   // args
+// 消费者
+func (r *VideoMQ) Consumer() {
+	q, err := r.video_channel.QueueDeclare(
+		r.QueueName,
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
-		fmt.Println("接收消息失败")
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 	}
-
-	forever := make(chan bool)
-	//启用协程处理消息
-	//go func() {
-	//	for d := range msgs {
-	//		//消息逻辑处理，可以自行设计逻辑
-	//		log.Printf("Received a message: %s", d.Body)
-	//	}
-	//}()
-
-	log.Println("call back queue.Name", call_back_queue.Name)
-	switch call_back_queue.Name {
-	case "feedreply":
-		go r.consumerVideoFeed(msgs)
-	case "publishlistreply":
-		go r.consumerVideoPublishList(msgs)
+	msgs, err := r.video_channel.Consume(
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 	}
-
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
-}
-
-// consumerVideoFeed 添加Feed的消费，并且发送给生产者完成消息
-func (r *VideoMQ) consumerVideoFeed(msgs <-chan amqp.Delivery) {
 	for msg := range msgs {
-		fmt.Println("开始消费")
-		// 解析参数
-		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
-		log.Println("添加视频消费者获得 params:", params)
-		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", msg.CorrelationId)
-		// 回调队列
-		err := r.channel.Publish(
-			"",
-			msg.ReplyTo,
-			false,
-			false,
-			amqp.Publishing{
-				ContentType:   "text/plain",
-				CorrelationId: msg.CorrelationId,
-				// ReplyTo:       msg.ReplyTo,
-				Body: []byte("Finish"),
-			},
-		)
-		if err != nil {
-			log.Println("消费后回调出错：", err)
-		}
-		fmt.Println("回调发送完毕")
+		log.Printf("消费了msg : %s \n", msg.Body)
+		msg.Ack(false)
 	}
-}
-
-// consumerVideoPublishList 添加publislist 的消费，并且发送给生产者完成消息
-func (r *VideoMQ) consumerVideoPublishList(msgs <-chan amqp.Delivery) {
-	for msg := range msgs {
-		fmt.Println("开始消费")
-		// 解析参数
-		params := strings.Split(fmt.Sprintf("%s", msg.Body), "-")
-		log.Println("添加视频消费者获得 params:", params)
-		log.Println("MQ参数：queue name : ", r.QueueName, " CorrID : ", msg.CorrelationId)
-		// 回调队列
-		err := r.channel.Publish(
-			"",
-			msg.ReplyTo,
-			false,
-			false,
-			amqp.Publishing{
-				ContentType:   "text/plain",
-				CorrelationId: msg.CorrelationId,
-				// ReplyTo:       msg.ReplyTo,
-				Body: []byte("Finish"),
-			},
-		)
-		if err != nil {
-			log.Println("消费后回调出错：", err)
-		}
-		fmt.Println("回调发送完毕")
-	}
-}
-
-// NewSimpleVideoRabbitMQ 新建简单模式的消息队列（生产者，消息队列，一个消费者）
-func NewSimpleVideoRabbitMQ(queueName string, replyto string) *VideoMQ {
-	return newVideoRabbitMQ(queueName, "", "", replyto)
-}
-func InitVideoRabbitMQ() {
-	// 初始化MQ对象，订阅通道
-	SimpleVideoFeedMq = NewSimpleVideoRabbitMQ("feed", "feedreply")
-	SimpleVideoPublishListMq = NewSimpleVideoRabbitMQ("publishlist", "publishlistreply")
-	// 开启 go routine 启动消费者
-	go SimpleVideoFeedMq.ConsumeSimpleVideo()
-	go SimpleVideoPublishListMq.ConsumeSimpleVideo()
 }

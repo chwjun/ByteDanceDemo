@@ -6,12 +6,13 @@ import (
 	oss1 "bytedancedemo/oss"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/google/uuid"
 	// "github.com/rs/xid"
 )
 
@@ -22,6 +23,7 @@ type VideoServiceImp struct {
 }
 
 const Video_list_size = 10
+const temp_pre = "./temp/"
 
 var (
 	size             = 8
@@ -218,16 +220,15 @@ func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
 }
 
 // 上传视频接口
-func (videoService *VideoServiceImp) Action(data []byte, title string, userID int64) error {
-	getbucketfile()
+func (videoService *VideoServiceImp) Action(title string, userID int64, videoname string) error {
+	// getbucketfile()
 	// 生成唯一文件名
-	videoName := uuid.New().String()
-	err := UploadVideoToOSS(data, videoName)
+	err := UploadVideoToOSS(videoname)
 	if err != nil {
 		log.Println("Upload Video ERROR : ", err)
 		return err
 	}
-	err = InsertVideo(videoName, userID, title)
+	err = InsertVideo(videoname, userID, title)
 	if err != nil {
 		log.Println("Insert Video ERROR : ", err)
 		return err
@@ -239,6 +240,7 @@ func (videoService *VideoServiceImp) Action(data []byte, title string, userID in
 func InsertVideo(videoname string, userID int64, title string) error {
 	var video model.Video
 	playurl := oss1.URLPre + videoname + ".mp4"
+	video.Title = title
 	video.AuthorID = userID
 	video.PlayURL = playurl
 	video.CreatedAt = time.Now()
@@ -259,11 +261,18 @@ func (p *progressListener) ProgressChanged(event *oss.ProgressEvent) {
 }
 
 // 视频上传到oss
-func UploadVideoToOSS(data []byte, videoname string) error {
-	err := oss1.Bucket.PutObject(oss1.URLPre+videoname+".mp4", bytes.NewReader(data))
+func UploadVideoToOSS(videoname string) error {
+	log.Println("即将上传视频", temp_pre+videoname+".mp4")
+	fileContent, err := ioutil.ReadFile(temp_pre + videoname + ".mp4")
 	if err != nil {
-		log.Println("Put Object ERROR : ", err)
-		return err
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
+	}
+
+	err = oss1.Bucket.PutObject(videoname+".mp4", bytes.NewReader(fileContent))
+	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 	}
 	return nil
 }

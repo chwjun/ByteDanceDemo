@@ -20,8 +20,9 @@ type FeedResponse struct {
 
 // 参数latest_time 和 token
 func Feed(c *gin.Context) {
+	// 传时间戳
 	default_time := time.Now().UnixMilli()
-
+	log.Println("Feed!!!!!!!!!!!!!")
 	var temp int64
 	var latest_time time.Time
 	var latest_time_str = c.Query("latest_time")
@@ -59,14 +60,11 @@ func Feed(c *gin.Context) {
 		user_id = int64(0)
 	}
 
-	// fmt.Println(user_id)
-	//fmt.Println(videoservice)
 	videoservice.Test()
 	// 使用消息队列
-	// t1 := time.Now()
-	// log.Println("运行mq前时间:", t1)
+
 	feedMQ := rabbitmq.SimpleVideoFeedMq
-	err := feedMQ.PublishSimpleVideo("feed", c)
+	err := feedMQ.PublishRequest("feed")
 	if err != nil {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
