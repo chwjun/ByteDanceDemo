@@ -22,6 +22,9 @@ func JWTMiddleware(c *gin.Context) {
 		tokenString = c.Request.PostFormValue("token")
 	}
 	if tokenString == "" {
+		tokenString = c.PostForm("token")
+	}
+	if tokenString == "" {
 		c.Set("role", "tourist")
 		c.Next()
 	} else {
