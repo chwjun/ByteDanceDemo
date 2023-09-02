@@ -48,7 +48,13 @@ func Register(c *gin.Context) {
 			Response: Response{StatusCode: 1, StatusMsg: "用户已存在"},
 		})
 	} else {
-		user, ok := usi.InsertUser(&model.User{Name: username, Password: passwordKey, Role: "common_user"})
+		user, ok := usi.InsertUser(&model.User{
+			Name:            username,
+			Password:        passwordKey,
+			Role:            "common_user",
+			Avatar:          "https://sample-douyin-video.oss-cn-beijing.aliyuncs.com/avatar1.jpeg",
+			BackgroundImage: "https://sample-douyin-video.oss-cn-beijing.aliyuncs.com/background.jpeg",
+		})
 		if !ok {
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "注册失败"},
