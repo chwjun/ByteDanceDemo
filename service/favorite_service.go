@@ -1,14 +1,14 @@
 package service
 
 type Video struct {
-	ID            int64
-	Author        User
-	PlayURL       string
-	CoverURL      string
-	FavoriteCount int64
-	CommentCount  int64
-	IsFavorite    bool
-	Title         string
+	ID            int64  `json:"id"`
+	Author        User   `json:"author"`
+	PlayURL       string `json:"play_url"`
+	CoverURL      string `json:"cover_url"`
+	FavoriteCount int64  `json:"favorite_count"`
+	CommentCount  int64  `json:"comment_count"`
+	IsFavorite    bool   `json:"is_favorite"`
+	Title         string `json:"title"`
 }
 
 const (
@@ -34,9 +34,9 @@ type FavoriteActionResponse struct {
 }
 
 type FavoriteListResponse struct {
-	StatusCode int32
-	StatusMsg  string
-	VideoList  []*Video
+	StatusCode int32    `json:"status_code"`
+	StatusMsg  string   `json:"status_msg"`
+	VideoList  []*Video `json:"video_list"`
 }
 type FavoriteServiceImpl struct {
 }
