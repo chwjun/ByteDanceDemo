@@ -32,12 +32,12 @@ func Feed(c *gin.Context) {
 			panic(1)
 		}
 		// 时间只能是比现在小的
-		if temp > default_time {
+		if temp > default_time || temp <= 0 {
 			temp = default_time
 		}
 		latest_time = time.UnixMilli(temp)
+		latest_time = latest_time.Add(time.Hour * 8)
 	}
-
 	// fmt.Println(latest_time)
 	videoservice := service.NewVSIInstance()
 	user_id := int64(0)
