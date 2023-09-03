@@ -2,9 +2,10 @@ package controller
 
 import (
 	"bytedancedemo/service"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/gin-gonic/gin"
@@ -18,31 +19,31 @@ type VideoListResponse struct {
 
 const temp_pre = "./temp/"
 
-// Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
-
 	data, err := c.FormFile("data")
 	if err != nil {
 		_, file, line, _ := runtime.Caller(0)
 		log.Printf("[%s : %d] %s \n", file, line, err.Error())
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "获取视频资源失败",
+		})
 	}
-
-	// 以一个不同的字符串作为视频名字，保存到本地tmp文件夹中
-	videoName := uuid.New().String()
-	if _, err := os.Stat(temp_pre); os.IsNotExist(err) {
-		err := os.Mkdir(temp_pre, os.ModePerm)
-		if err != nil {
-			_, file, line, _ := runtime.Caller(0)
-			log.Printf("[%s : %d] %s \n", file, line, err.Error())
-		}
-	}
-	tempPath := temp_pre + videoName + ".mp4"
-	err = c.SaveUploadedFile(data, tempPath)
+	file, err := data.Open()
 	if err != nil {
 		_, file, line, _ := runtime.Caller(0)
 		log.Printf("[%s : %d] %s \n", file, line, err.Error())
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "视频打开失败",
+		})
 	}
-	defer os.Remove(tempPath)
+	defer file.Close()
+	uniqueName := uuid.New().String()
+	// 拓展名
+	ext := filepath.Ext(data.Filename)
+	// 视频名字
+	objectName := fmt.Sprintf("%s%s", uniqueName, ext)
 
 	// 获取用户id
 	user_id := int64(0)
@@ -59,7 +60,7 @@ func Publish(c *gin.Context) {
 	}
 	title := c.PostForm("title")
 	videoservice := service.NewVSIInstance()
-	err = videoservice.Action(title, user_id, videoName)
+	err = videoservice.Action(title, user_id, objectName, file)
 	if err != nil {
 		log.Println("Action ERROR : ", err)
 		c.JSON(http.StatusOK, Response{

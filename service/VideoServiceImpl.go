@@ -5,10 +5,9 @@ import (
 	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/model"
 	oss1 "bytedancedemo/oss"
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"runtime"
 	"sync"
 	"time"
@@ -200,11 +199,9 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 }
 
-// 上传视频接口
-func (videoService *VideoServiceImp) Action(title string, userID int64, videoname string) error {
-	// getbucketfile()
-	// 生成唯一文件名
-	err := UploadVideoToOSS(videoname)
+// 上传视频接口新的
+func (videoService *VideoServiceImp) Action(title string, userID int64, videoname string, file multipart.File) error {
+	err := UploadVideoToOSS(videoname, file)
 	if err != nil {
 		log.Println("Upload Video ERROR : ", err)
 		return err
@@ -220,7 +217,7 @@ func (videoService *VideoServiceImp) Action(title string, userID int64, videonam
 // 将视频信息加入到数据库中
 func InsertVideo(videoname string, userID int64, title string) error {
 	var video model.Video
-	playurl := oss1.URLPre + videoname + ".mp4"
+	playurl := oss1.URLPre + videoname
 	video.Title = title
 	video.AuthorID = userID
 	video.PlayURL = playurl
@@ -232,32 +229,16 @@ func InsertVideo(videoname string, userID int64, title string) error {
 	return err
 }
 
-// 进度监听器
-type progressListener struct{}
-
-// 监听上传进度
-func (p *progressListener) ProgressChanged(event *oss.ProgressEvent) {
-	// 这里可以根据自己的需求处理上传进度更新事件
-	fmt.Printf("已上传：%d / %d\n", event.ConsumedBytes, event.TotalBytes)
-}
-
 // 视频上传到oss
-func UploadVideoToOSS(videoname string) error {
-	log.Println("即将上传视频", temp_pre+videoname+".mp4")
-	fileContent, err := ioutil.ReadFile(temp_pre + videoname + ".mp4")
-	if err != nil {
-		_, file, line, _ := runtime.Caller(0)
-		log.Printf("[%s : %d] %s \n", file, line, err.Error())
-	}
-
-	err = oss1.Bucket.PutObject(videoname+".mp4", bytes.NewReader(fileContent))
+func UploadVideoToOSS(videoname string, file multipart.File) error {
+	log.Println("即将上传视频", videoname)
+	err := oss1.Bucket.PutObject(videoname, file)
 	if err != nil {
 		_, file, line, _ := runtime.Caller(0)
 		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 	}
 	return nil
 }
-
 func getbucketfile() {
 	bucket := oss1.Bucket
 	continueToken := ""
