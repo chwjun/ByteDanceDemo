@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytedancedemo/model"
+	"mime/multipart"
 	"time"
 )
 
@@ -29,5 +30,5 @@ type VideoService interface {
 	// 测试接口是否获取成功
 	Test()
 	// 视频上传接口
-	Action(data []byte, title string, userID int64) error
+	Action(title string, userID int64, videoname string, file multipart.File) error
 }
