@@ -57,7 +57,7 @@ func (videoService *VideoServiceImp) Feed(latest_time int64, user_id int64) ([]R
 		return nil, time.Time{}, err
 	}
 	// 根据最新时间查找数据库获取视频的信息
-	fmt.Println(len(dao_video_list))
+	// fmt.Println(len(dao_video_list))
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
 		fmt.Println("Feed")
 		return nil, time.Time{}, err

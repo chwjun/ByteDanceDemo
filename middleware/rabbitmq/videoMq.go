@@ -289,14 +289,6 @@ func (r *VideoMQ) Consumer() {
 			_, file, line, _ := runtime.Caller(0)
 			log.Printf("[%s : %d] %s \n", file, line, err.Error())
 		}
-		_, err = r.video_channel.QueueDeclare(
-			d.ReplyTo,
-			false,
-			true,
-			false,
-			false,
-			nil,
-		)
 
 		err = r.video_channel.Publish(
 			"",
@@ -313,16 +305,7 @@ func (r *VideoMQ) Consumer() {
 			_, file, line, _ := runtime.Caller(0)
 			log.Printf("[%s : %d] %s \n", file, line, err.Error())
 		}
-		// // 删除队列
-		// _, err = r.video_channel.QueueDelete(
-		// 	d.ReplyTo, // 队列名称
-		// 	false,     // 如果为 true，则只能删除被未被使用的队列，否则会返回错误
-		// 	false,     // 如果为 true，则只删除当前绑定的队列
-		// 	false,     // 如果为 true，则在等待服务器响应时删除队列
-		// )
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
+		d.Ack(false)
 		log.Println("-------------------------数据消费完毕-------------------------")
 	}
 }

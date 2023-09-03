@@ -21,7 +21,7 @@ type FeedResponse struct {
 func Feed(c *gin.Context) {
 	// 传时间戳
 	default_time := time.Now().UnixMilli()
-	log.Println("Feed!!!!!!!!!!!!!")
+	// log.Println("Feed!!!!!!!!!!!!!")
 	// 时间戳
 	var temp int64
 	var err error
@@ -41,9 +41,9 @@ func Feed(c *gin.Context) {
 		if temp <= 0 {
 			temp = time.Now().UnixMilli()
 		}
-		fmt.Println(temp)
+		// fmt.Println(temp)
 	}
-	fmt.Println(temp)
+	// fmt.Println(temp)
 	videoservice := service.NewVSIInstance()
 	user_id := int64(0)
 	user_id_temp, exits := c.Get("user_id")
