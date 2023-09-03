@@ -78,16 +78,39 @@ func (r *VideoMQ) PublishRequest(queuename string) error {
 		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 		return err
 	}
-	log.Println("消息发布")
-	confirmations := r.video_channel.NotifyPublish(make(chan amqp.Confirmation, 1))
-
-	confirm := <-confirmations
-	if confirm.Ack {
-		log.Println("消息被确认")
-		return nil
-	} else {
-		log.Println("消息被拒绝")
-	}
+	log.Println("消息发布", r.QueueName)
+	// confirmations := r.video_channel.NotifyPublish(make(chan amqp.Confirmation, 1))
+	// for {
+	// 	select {
+	// 	case confirm := <-confirmations:
+	// 		if confirm.Ack {
+	// 			log.Println("消息被确认")
+	// 			// time.Sleep(6 * time.Second)
+	// 			return nil
+	// 		} else {
+	// 			log.Println("消息被拒绝")
+	// 			return nil
+	// 		}
+	// 	case <-time.After(6 * time.Second):
+	// 		err := r.video_channel.Publish(
+	// 			"",
+	// 			r.QueueName,
+	// 			false,
+	// 			false,
+	// 			amqp.Publishing{
+	// 				ContentType: "text/plain",
+	// 				Body:        []byte(queuename),
+	// 			},
+	// 		)
+	// 		if err != nil {
+	// 			_, file, line, _ := runtime.Caller(0)
+	// 			log.Printf("[%s : %d] %s \n", file, line, err.Error())
+	// 			return err
+	// 		}
+	// 		log.Println("消息重传")
+	// 		confirmations = r.video_channel.NotifyPublish(make(chan amqp.Confirmation, 1))
+	// 	}
+	// }
 	return nil
 }
 
@@ -120,6 +143,7 @@ func (r *VideoMQ) Consumer() {
 	}
 	for msg := range msgs {
 		log.Printf("消费了msg : %s \n", msg.Body)
-		msg.Ack(false)
+		// time.Sleep(6 * time.Second)
+		// msg.Ack(false)
 	}
 }

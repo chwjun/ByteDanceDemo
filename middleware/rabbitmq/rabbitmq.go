@@ -50,11 +50,11 @@ func InitRabbitMQ() {
 		BaseRmq.failOnError(err, "Failed to set to confirm mode")
 		log.Println("无法设置confirm模式")
 	}
-	err = BaseRmq.video_channel.Confirm(false)
-	if err != nil {
-		BaseRmq.failOnError(err, "Failed to set to confirm mode")
-		log.Println("无法设置confirm模式")
-	}
+	// err = BaseRmq.video_channel.Confirm(false)
+	// if err != nil {
+	// 	BaseRmq.failOnError(err, "Failed to set to confirm mode")
+	// 	log.Println("无法设置confirm模式")
+	// }
 	log.Println("RabbitMQ")
 }
 
