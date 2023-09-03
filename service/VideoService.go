@@ -19,7 +19,7 @@ type ResponseVideo struct {
 
 type VideoService interface {
 	// 这里的Video是Feed接口返回的视频列表，不是数据库中的视频列表
-	Feed(latest_time time.Time, user_id int64) ([]ResponseVideo, time.Time, error)
+	Feed(latest_time int64, user_id int64) ([]ResponseVideo, time.Time, error)
 	// 这里的Video是list接口返回的视频列表，不是数据库中的视频列表
 	PublishList(user_id int64) ([]ResponseVideo, error)
 	// 通过作者ID获取视频列表
@@ -28,4 +28,6 @@ type VideoService interface {
 	GetVideoCountByAuthorID(authorId int64) (int64, error)
 	// 测试接口是否获取成功
 	Test()
+	// 视频上传接口
+	Action(data []byte, title string, userID int64) error
 }

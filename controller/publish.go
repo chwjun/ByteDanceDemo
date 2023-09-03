@@ -3,10 +3,13 @@ package controller
 import (
 	"bytedancedemo/service"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type VideoListResponse struct {
@@ -14,44 +17,35 @@ type VideoListResponse struct {
 	VideoList []service.ResponseVideo `json:"video_list"`
 }
 
-// Publish check token then save upload file to public directory
+const temp_pre = "./temp/"
+
 func Publish(c *gin.Context) {
-	token := c.PostForm("token")
-
-	if _, exist := usersLoginInfo[token]; !exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-		return
-	}
-
 	data, err := c.FormFile("data")
 	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
-			StatusMsg:  err.Error(),
+			StatusMsg:  "获取视频资源失败",
 		})
-		return
 	}
-
-	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token]
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
-	saveFile := filepath.Join("./public/", finalName)
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
+	file, err := data.Open()
+	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
-			StatusMsg:  err.Error(),
+			StatusMsg:  "视频打开失败",
 		})
-		return
 	}
+	defer file.Close()
+	uniqueName := uuid.New().String()
+	// 拓展名
+	ext := filepath.Ext(data.Filename)
+	// 视频名字
+	objectName := fmt.Sprintf("%s%s", uniqueName, ext)
 
-	c.JSON(http.StatusOK, Response{
-		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
-	})
-}
-
-// PublishList all users have same publish video list
-func PublishList(c *gin.Context) {
+	// 获取用户id
 	user_id := int64(0)
 	user_id_temp, exits := c.Get("user_id")
 	if !exits {
@@ -63,6 +57,45 @@ func PublishList(c *gin.Context) {
 	default:
 		user_id = int64(0)
 	}
+	title := c.PostForm("title")
+	videoservice := service.NewVSIInstance()
+	err = videoservice.Action(title, user_id, objectName, file)
+	if err != nil {
+		log.Println("Action ERROR : ", err)
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "上传或存储失败" + err.Error(),
+		})
+	}
+
+	c.JSON(http.StatusOK, Response{
+		StatusCode: 0,
+		StatusMsg:  title + " uploaded successfully",
+	})
+}
+
+// PublishList all users have same publish video list
+func PublishList(c *gin.Context) {
+	log.Println("Publish list !!!!!!!!!!")
+	user_id := int64(0)
+	user_id_temp, exits := c.Get("user_id")
+	if !exits {
+		user_id = int64(0)
+	}
+	switch user_id_temp.(type) {
+	case int64:
+		user_id = user_id_temp.(int64)
+	default:
+		user_id = int64(0)
+	}
+	// publishlistMQ := rabbitmq.SimpleVideoPublishListMq
+	// err := publishlistMQ.PublishRequest("publishlist")
+	// if err != nil {
+	// 	c.JSON(http.StatusOK, FeedResponse{
+	// 		Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
+	// 	})
+	// 	return
+	// }
 	videoservice := service.NewVSIInstance()
 	video_list, err := videoservice.PublishList(user_id)
 	if err != nil {

@@ -44,7 +44,7 @@ func TestVideoServiceImpl_Feed(t *testing.T) {
 	tests[1].want_authorID = 7
 	t.Run(tests[1].name, func(t *testing.T) {
 		vsi := &VideoServiceImp{}
-		videolist, _, err := vsi.Feed(tests[1].latest_time, tests[1].user_id)
+		videolist, _, err := vsi.Feed(tests[1].latest_time.UnixMilli(), tests[1].user_id)
 		if err != nil {
 			t.Errorf(err.Error())
 		} else if len(videolist) == 0 {
@@ -63,7 +63,7 @@ func TestVideoServiceImpl_Feed(t *testing.T) {
 	tests[2].want_authorID = 10
 	t.Run(tests[2].name, func(t *testing.T) {
 		vsi := &VideoServiceImp{}
-		videolist, _, err := vsi.Feed(tests[2].latest_time, tests[2].user_id)
+		videolist, _, err := vsi.Feed(tests[2].latest_time.UnixMilli(), tests[2].user_id)
 		if err != nil {
 			t.Errorf(err.Error())
 		} else if len(videolist) == 0 {
@@ -158,7 +158,7 @@ func BenchmarkVideoServiceImpl_Feed(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		vsi.Feed(time.Now(), 0)
+		vsi.Feed(time.Now().UnixMilli(), 0)
 	}
 }
 

@@ -3,6 +3,7 @@ package controller
 import (
 	"bytedancedemo/service"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,15 +19,17 @@ type FeedResponse struct {
 
 // 参数latest_time 和 token
 func Feed(c *gin.Context) {
+	// 传时间戳
 	default_time := time.Now().UnixMilli()
+	// log.Println("Feed!!!!!!!!!!!!!")
+	// 时间戳
 	var temp int64
-	var latest_time time.Time
+	var err error
 	var latest_time_str = c.Query("latest_time")
 	if latest_time_str == "" {
 		temp = default_time
-		latest_time = time.UnixMilli(temp)
 	} else {
-		temp, err := strconv.ParseInt(latest_time_str, 10, 64)
+		temp, err = strconv.ParseInt(latest_time_str, 10, 64)
 		if err != nil {
 			fmt.Println("%s cannot change to int64", latest_time_str)
 			panic(1)
@@ -35,14 +38,15 @@ func Feed(c *gin.Context) {
 		if temp > default_time || temp <= 0 {
 			temp = default_time
 		}
-		latest_time = time.UnixMilli(temp)
-		latest_time = latest_time.Add(time.Hour * 8)
+		if temp <= 0 {
+			temp = time.Now().UnixMilli()
+		}
+		// fmt.Println(temp)
 	}
-	// fmt.Println(latest_time)
+	// fmt.Println(temp)
 	videoservice := service.NewVSIInstance()
 	user_id := int64(0)
 	user_id_temp, exits := c.Get("user_id")
-
 	if !exits {
 		user_id = int64(0)
 	}
@@ -53,15 +57,17 @@ func Feed(c *gin.Context) {
 		user_id = int64(0)
 	}
 
-	//fmt.Println(user_id)
-	//fmt.Println(videoservice)
 	videoservice.Test()
-	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
+	// 使用消息队列
+
+	// log.Println("运行时间:", time.Now().Sub(t1))
+	t2 := time.Now()
+	video_list, last_time, err := videoservice.Feed(temp, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {
 		fmt.Println("error happend")
 	}
-
+	log.Println("运行时间:", time.Now().Sub(t2))
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0, StatusMsg: ""},
 		VideoList: video_list,
