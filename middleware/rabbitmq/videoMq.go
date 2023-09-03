@@ -149,7 +149,7 @@ func (r *VideoMQ) PublishRequest(queuename string, latest_time int64, user_id in
 		corrID,
 		false,
 		true,
-		true,
+		false,
 		false,
 		nil,
 	)
@@ -218,13 +218,15 @@ func (r *VideoMQ) PublishRequest(queuename string, latest_time int64, user_id in
 			d.Ack(false)
 			log.Println("成功获取消息的回调")
 			// 删除队列
-			if _, err := r.video_channel.QueueDelete(
+			_, err := r.video_channel.QueueDelete(
 				corrID, // 队列名称
 				false,  // 如果为 true，则只能删除被未被使用的队列，否则会返回错误
 				false,  // 如果为 true，则只删除当前绑定的队列
 				false,  // 如果为 true，则在等待服务器响应时删除队列
-			); err != nil {
-				log.Fatal(err)
+			)
+			if err != nil {
+				log.Println(err)
+				return nil, err
 			}
 			return response.ResponseVideoList, nil
 		} else {
@@ -291,7 +293,7 @@ func (r *VideoMQ) Consumer() {
 			d.ReplyTo,
 			false,
 			true,
-			true,
+			false,
 			false,
 			nil,
 		)
@@ -311,6 +313,16 @@ func (r *VideoMQ) Consumer() {
 			_, file, line, _ := runtime.Caller(0)
 			log.Printf("[%s : %d] %s \n", file, line, err.Error())
 		}
+		// // 删除队列
+		// _, err = r.video_channel.QueueDelete(
+		// 	d.ReplyTo, // 队列名称
+		// 	false,     // 如果为 true，则只能删除被未被使用的队列，否则会返回错误
+		// 	false,     // 如果为 true，则只删除当前绑定的队列
+		// 	false,     // 如果为 true，则在等待服务器响应时删除队列
+		// )
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 		log.Println("-------------------------数据消费完毕-------------------------")
 	}
 }

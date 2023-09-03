@@ -36,16 +36,10 @@ func InitRabbitMQ() {
 		BaseRmq.failOnError(err, "Failed to connect to RabbitMQ")
 		log.Println("无法连接到rabbitmq")
 	}
-	conn1, err := amqp.Dial(BaseRmq.MqUrl)
-	if err != nil {
-		BaseRmq.failOnError(err, "Failed to connect to RabbitMQ")
-		log.Println("无法连接到rabbitmq")
-	}
 	BaseRmq.conn = conn
-	BaseRmq.video_conn = conn1
 	BaseRmq.channel, err = conn.Channel()
 	BaseRmq.failOnError(err, "Failed to get channel")
-	BaseRmq.video_channel, err = conn1.Channel()
+	BaseRmq.video_channel, err = conn.Channel()
 	if err != nil {
 		BaseRmq.failOnError(err, "Failed to set to confirm mode")
 		log.Println("无法创建")
