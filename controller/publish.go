@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/service"
 	"log"
 	"net/http"
@@ -89,14 +88,14 @@ func PublishList(c *gin.Context) {
 	default:
 		user_id = int64(0)
 	}
-	publishlistMQ := rabbitmq.SimpleVideoPublishListMq
-	err := publishlistMQ.PublishRequest("publishlist")
-	if err != nil {
-		c.JSON(http.StatusOK, FeedResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
-		})
-		return
-	}
+	// publishlistMQ := rabbitmq.SimpleVideoPublishListMq
+	// err := publishlistMQ.PublishRequest("publishlist")
+	// if err != nil {
+	// 	c.JSON(http.StatusOK, FeedResponse{
+	// 		Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
+	// 	})
+	// 	return
+	// }
 	videoservice := service.NewVSIInstance()
 	video_list, err := videoservice.PublishList(user_id)
 	if err != nil {

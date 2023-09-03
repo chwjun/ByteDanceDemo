@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytedancedemo/dao"
+	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/model"
 	oss1 "bytedancedemo/oss"
 	"bytes"
@@ -26,7 +27,6 @@ const Video_list_size = 10
 const temp_pre = "./temp/"
 
 var (
-	size             = 8
 	videoServiceImp  *VideoServiceImp // 给controller用的
 	videoServiceOnce sync.Once
 )
@@ -47,18 +47,21 @@ func (videoService *VideoServiceImp) Test() {
 	fmt.Println("获取接口成功")
 }
 
-func (videoService *VideoServiceImp) Feed(latest_time time.Time, user_id int64) ([]ResponseVideo, time.Time, error) {
-	// dao.SetDefault(database.DB)
-	// fmt.Println("进入了feed")
+func (videoService *VideoServiceImp) Feed(latest_time int64, user_id int64) ([]ResponseVideo, time.Time, error) {
+	// 通过rabbitmq 获取数据库中的数据
+	feedMQ := rabbitmq.SimpleVideoFeedMq
+	dao_video_list, err := feedMQ.PublishRequest("feed", latest_time, user_id)
+	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		log.Printf("[%s : %d] %s \n", file, line, err.Error())
+		return nil, time.Time{}, err
+	}
 	// 根据最新时间查找数据库获取视频的信息
-	dao_video_list, err := GetVideosByLatestTime(latest_time)
-	// fmt.Println(len(dao_video_list))
+	fmt.Println(len(dao_video_list))
 	if err != nil || len(dao_video_list) == 0 || dao_video_list == nil {
 		fmt.Println("Feed")
 		return nil, time.Time{}, err
 	}
-	// log.Println("数据库操作运行时间:", time.Now().Sub(t1))
-	// t2 := time.Now()
 	// 获取剩余信息，构造返回的结构体
 	response_video_list, err := makeResponseVideo(dao_video_list, videoService, int64(user_id))
 	if err != nil {
@@ -159,7 +162,7 @@ func makeResponseVideo(dao_video_list []*model.Video, videoService *VideoService
 
 // 提供给外部的接口
 func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
-	dao_video_list, err := DAOGetVideoListByAuthorID(authorId)
+	dao_video_list, err := rabbitmq.DAOGetVideoListByAuthorID(authorId)
 	if err != nil {
 		return nil, err
 	} else {
@@ -169,7 +172,7 @@ func (videoService *VideoServiceImp) GetVideoListByAuthorID(authorId int64) ([]*
 
 // 提供给外部的接口
 func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (int64, error) {
-	dao_video_list, err := DAOGetVideoListByAuthorID(authorId)
+	dao_video_list, err := rabbitmq.DAOGetVideoListByAuthorID(authorId)
 	if err != nil {
 		return 0, err
 	} else {
@@ -178,8 +181,14 @@ func (videoService *VideoServiceImp) GetVideoCountByAuthorID(authorId int64) (in
 }
 
 func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo, error) {
+	// 通过rabbitmq 获取数据库中的数据
+	publishlistmq := rabbitmq.SimpleVideoPublishListMq
+	dao_video_list, err := publishlistmq.PublishRequest("publishlist", time.Now().UnixMilli(), user_id)
+	if err != nil {
+		return nil, err
+	}
 	// dao.SetDefault(database.DB)
-	dao_video_list, err := videoService.GetVideoListByAuthorID(user_id)
+	// dao_video_list, err := videoService.GetVideoListByAuthorID(user_id)
 	if err != nil {
 		return nil, err
 	}
@@ -189,34 +198,6 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 	}
 	return response_video_list, err
 
-}
-
-func DAOGetVideoListByAuthorID(authorId int64) ([]*model.Video, error) {
-	V := dao.Video
-	// fmt.Println(V)
-	result, err := V.Where(V.AuthorID.Eq(authorId)).Order(V.CreatedAt.Desc()).Find()
-	if err != nil || result == nil || len(result) == 0 {
-		return nil, err
-	}
-	return result, err
-}
-
-// 这个是video专用的通过时间获取videolist
-func GetVideosByLatestTime(latest_time time.Time) ([]*model.Video, error) {
-	// dao.SetDefault(mysql.DB)
-	// 在这里查询
-	V := dao.Video
-	// fmt.Println(V)
-	result, err := V.Where(V.CreatedAt.Lt(latest_time)).Order(V.CreatedAt.Desc()).Limit(size).Find()
-	// fmt.Println(latest_time)
-	// fmt.Println(len(result))
-	if err != nil {
-		fmt.Println("查询最新时间的videos出错了")
-		result = nil
-		return nil, err
-	}
-	log.Println("从数据库获取视频的数量", len(result))
-	return result, err
 }
 
 // 上传视频接口

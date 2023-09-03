@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"bytedancedemo/middleware/rabbitmq"
 	"bytedancedemo/service"
 	"fmt"
 	"log"
@@ -23,14 +22,14 @@ func Feed(c *gin.Context) {
 	// 传时间戳
 	default_time := time.Now().UnixMilli()
 	log.Println("Feed!!!!!!!!!!!!!")
+	// 时间戳
 	var temp int64
-	var latest_time time.Time
+	var err error
 	var latest_time_str = c.Query("latest_time")
 	if latest_time_str == "" {
 		temp = default_time
-		latest_time = time.UnixMilli(temp)
 	} else {
-		temp, err := strconv.ParseInt(latest_time_str, 10, 64)
+		temp, err = strconv.ParseInt(latest_time_str, 10, 64)
 		if err != nil {
 			fmt.Println("%s cannot change to int64", latest_time_str)
 			panic(1)
@@ -42,14 +41,12 @@ func Feed(c *gin.Context) {
 		if temp <= 0 {
 			temp = time.Now().UnixMilli()
 		}
-		latest_time = time.UnixMilli(temp)
+		fmt.Println(temp)
 	}
-
-	// fmt.Println(latest_time)
+	fmt.Println(temp)
 	videoservice := service.NewVSIInstance()
 	user_id := int64(0)
 	user_id_temp, exits := c.Get("user_id")
-
 	if !exits {
 		user_id = int64(0)
 	}
@@ -63,17 +60,9 @@ func Feed(c *gin.Context) {
 	videoservice.Test()
 	// 使用消息队列
 
-	feedMQ := rabbitmq.SimpleVideoFeedMq
-	err := feedMQ.PublishRequest("feed")
-	if err != nil {
-		c.JSON(http.StatusOK, FeedResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
-		})
-		return
-	}
 	// log.Println("运行时间:", time.Now().Sub(t1))
 	t2 := time.Now()
-	video_list, last_time, err := videoservice.Feed(latest_time, user_id)
+	video_list, last_time, err := videoservice.Feed(temp, user_id)
 	last_time1 := last_time.UnixMilli()
 	if err != nil {
 		fmt.Println("error happend")
