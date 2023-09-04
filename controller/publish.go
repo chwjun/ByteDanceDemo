@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"runtime"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -78,24 +79,15 @@ func Publish(c *gin.Context) {
 func PublishList(c *gin.Context) {
 	log.Println("Publish list !!!!!!!!!!")
 	user_id := int64(0)
-	user_id_temp, exits := c.Get("user_id")
-	if !exits {
-		user_id = int64(0)
-	}
-	switch user_id_temp.(type) {
-	case int64:
-		user_id = user_id_temp.(int64)
-	default:
-		user_id = int64(0)
-	}
+	user_id_temp := c.PostForm("user_id")
+	user_id, err := strconv.ParseInt(user_id_temp, 10, 64)
 	// publishlistMQ := rabbitmq.SimpleVideoPublishListMq
 	// err := publishlistMQ.PublishRequest("publishlist")
-	// if err != nil {
-	// 	c.JSON(http.StatusOK, FeedResponse{
-	// 		Response: Response{StatusCode: 1, StatusMsg: "消息队列已满或消息队列出错"},
-	// 	})
-	// 	return
-	// }
+	if err != nil {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "获取用户id失败"},
+		})
+	}
 	videoservice := service.NewVSIInstance()
 	video_list, err := videoservice.PublishList(user_id)
 	if err != nil {
