@@ -86,7 +86,7 @@ func Publish(c *gin.Context) {
 func PublishList(c *gin.Context) {
 	log.Println("Publish list !!!!!!!!!!")
 	user_id := int64(0)
-	user_id_temp := c.PostForm("user_id")
+	user_id_temp := c.Query("user_id")
 	user_id, err := strconv.ParseInt(user_id_temp, 10, 64)
 	// publishlistMQ := rabbitmq.SimpleVideoPublishListMq
 	// err := publishlistMQ.PublishRequest("publishlist")
