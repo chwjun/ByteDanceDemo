@@ -67,6 +67,7 @@ func Publish(c *gin.Context) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		log.Println("竟然还能运行")
 		defer wg.Done()
 		videoservice := service.NewVSIInstance()
 		err = videoservice.Action(title, user_id, objectName, file)
