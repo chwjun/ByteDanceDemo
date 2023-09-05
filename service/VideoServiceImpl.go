@@ -202,16 +202,20 @@ func (videoService *VideoServiceImp) PublishList(user_id int64) ([]ResponseVideo
 
 // 上传视频接口新的
 func (videoService *VideoServiceImp) Action(title string, userID int64, videoname string, file multipart.File) error {
+	t1 := time.Now()
 	err := UploadVideoToOSS(videoname, file)
 	if err != nil {
 		log.Println("Upload Video ERROR : ", err)
 		return err
 	}
+	log.Println("上传时间", time.Since(t1))
+	t2 := time.Now()
 	err = InsertVideo(videoname, userID, title)
 	if err != nil {
 		log.Println("Insert Video ERROR : ", err)
 		return err
 	}
+	log.Println("写入数据库时间：", time.Since(t2))
 	return nil
 }
 

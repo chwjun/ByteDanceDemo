@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -59,20 +60,26 @@ func Publish(c *gin.Context) {
 		user_id = int64(0)
 	}
 	title := c.PostForm("title")
-	videoservice := service.NewVSIInstance()
-	err = videoservice.Action(title, user_id, objectName, file)
-	if err != nil {
-		log.Println("Action ERROR : ", err)
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  "上传或存储失败" + err.Error(),
-		})
-	}
-
 	c.JSON(http.StatusOK, Response{
 		StatusCode: 0,
 		StatusMsg:  title + " uploaded successfully",
 	})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		videoservice := service.NewVSIInstance()
+		err = videoservice.Action(title, user_id, objectName, file)
+		if err != nil {
+			log.Println("Action ERROR : ", err)
+			// c.JSON(http.StatusOK, Response{
+			// 	StatusCode: 1,
+			// 	StatusMsg:  "上传或存储失败" + err.Error(),
+			// })
+		}
+	}()
+	wg.Wait()
+	log.Println("上传结束")
 }
 
 // PublishList all users have same publish video list
