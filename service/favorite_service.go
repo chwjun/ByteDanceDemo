@@ -29,8 +29,8 @@ type FavoriteService interface {
 }
 
 type FavoriteActionResponse struct {
-	StatusCode int32
-	StatusMsg  string
+	StatusCode int32  `json:"status_code"`
+	StatusMsg  string `json:"status_msg"`
 }
 
 type FavoriteListResponse struct {

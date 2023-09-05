@@ -3,15 +3,14 @@ package controller
 import (
 	"bytedancedemo/service"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"time"
 )
 
 type VideoListResponse struct {
@@ -64,10 +63,10 @@ func Publish(c *gin.Context) {
 		StatusCode: 0,
 		StatusMsg:  title + " uploaded successfully",
 	})
-	var wg sync.WaitGroup
-	wg.Add(1)
+	//var wg sync.WaitGroup
+	//wg.Add(1)
 	go func() {
-		defer wg.Done()
+		//defer wg.Done()
 		videoservice := service.NewVSIInstance()
 		err = videoservice.Action(title, user_id, objectName, file)
 		if err != nil {
@@ -78,7 +77,8 @@ func Publish(c *gin.Context) {
 			// })
 		}
 	}()
-	wg.Wait()
+	//wg.Wait()
+	time.Sleep(time.Second)
 	log.Println("上传结束")
 }
 
