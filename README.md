@@ -1,29 +1,33 @@
 # simple-demo
 
-## 抖音项目服务端简单示例
+## 抖音项目服务端
 
 具体功能内容参考飞书说明文档
 
-工程无其他依赖，直接编译运行即可
+## 部署文档
 
-```shell
-go build && ./simple-demo
-```
+您需要依次完成以下步骤
 
-### 功能说明
+1. 完善配置文件
+    ```shell
+    mv settings.yml.template settings.yml
+    ```
+    > 依照配置文件模板的说明填写配置文件，你至少需要以下环境的支持：
+    > - MySQL
+    > - Redis
+    > - rabbitMQ
+2. MySQL建表
+    > 根据 `config/init.sql` 文件中的建表语句建立项目所需要的表格
+3. 初始化项目
+    ```shell
+        go run main.go init
+    ```
+   > `init`命令将初始化角色权限，同时利用`gorm gen`生成安全可靠的DAO层。
+   > 
+   > 所以，在你改动MySQL中的表结构之后，也需要重新执行 `init`命令
 
-接口功能不完善，仅作为示例
-
-* 用户登录数据保存在内存中，单次运行过程中有效
-* 视频上传后会保存到本地 public 目录中，访问时用 127.0.0.1:8080/static/video_name 即可
-
-### 测试
-
-test 目录下为不同场景的功能测试case，可用于验证功能实现正确性
-
-其中 common.go 中的 _serverAddr_ 为服务部署的地址，默认为本机地址，可以根据实际情况修改
-
-测试数据写在 demo_data.go 中，用于列表接口的 mock 测试
-
-
-
+4. 启动服务器程序
+    ```shell
+        go run main.go server -m=release -c="./config/settings.yml"
+    ```
+   > 不同的模式会有不同的日志输出方式
